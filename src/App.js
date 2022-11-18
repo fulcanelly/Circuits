@@ -8,7 +8,6 @@ import * as R from 'ramda'
 const settings = {
   cellSize: 50, 
   gridSize: 6
-  
 }
 
 function SpecialDiv({children}) {
@@ -194,18 +193,6 @@ function Grid({ dispatch, state, children }) {
   useEffect(() => {
     const canvas = canvasRef.current
     resizeCanvas(canvas)
-    const ctx = canvas.getContext('2d')
-    let animationFrameId
-
-
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    //Our first draw
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
-    return () => {
-   //   window.cancelAnimationFrame(animationFrameId)
-    }
   }, [])
   
   const drawMouseHover = ({x, y}) => {
@@ -238,9 +225,6 @@ function Grid({ dispatch, state, children }) {
   }
 
   const handleMouseMove = (event) => {
-  
-
-
     const pos = {
       x: event.nativeEvent.layerX,
       y: event.nativeEvent.layerY
@@ -272,20 +256,18 @@ function Grid({ dispatch, state, children }) {
 }
 
 
-function Toolbar({isEditing, setEditing}) {
+function Toolbar({dispatch, state}) {
   const style = {
     height: '50px',
-    zIndex: 234,
   }
 
   const toggleEditing = () => {
-    console.log("TOGGLE")
-    setEditing(!isEditing)
+    sendToggleEditing(dispatch)
   }
 
   return <div style={style}> 
     <Switch
-      checked={isEditing}
+      checked={state.mode.editing}
       onChange={toggleEditing} 
       variant="outlined"
     > </Switch>
@@ -344,7 +326,6 @@ function PlaceholderCircuit() {
     height: '50px',
     backgroundColor: 'blue',
     position: 'absolute'
-   // zIndex: 0
   }
 
   return <div style={style}></div>
@@ -379,15 +360,37 @@ function sendClickEvent(dispatch, pos) {
 }
 
 
-function handleMouseClick(state, action) {
-  let cells = [...state.cells, action.pos]
-  
-  // let cells = [action.pos]
+function sendToggleEditing(dispatch) {
+  dispatch({
+    type: 'edit',
+    id: id++ 
+  }) 
+}
 
+
+function handleToggleEditing(state, action) {
   return {
-    ...state, cells
+    ...state, 
+    mode: { 
+      ...state.mode, 
+      editing: ! state.mode.editing 
+    }
   }
 }
+
+function handleMouseClick(state, action) {
+  if (!state.mode.editing) {
+    return state
+  }
+
+  return {
+    ...state, 
+    cells: R.uniqWith(
+      R.eqBy(JSON.stringify), 
+      [...state.cells, action.pos])
+  }
+}
+
 
 function defaultReducer(state, action) {
   console.log(state)
@@ -395,19 +398,13 @@ function defaultReducer(state, action) {
   if (state.lastId == action.id) {
     return state
   }
-  
- 
+
   return R.cond([
     [R.propEq('type', 'click'), R.curry(handleMouseClick)(state)],
+    [R.propEq('type', 'edit'), R.curry(handleToggleEditing)(state)],
     [R.T, R.always(state)]
   ])(action)
 
-  //console.log("got action")
-  //console.log(action)
-
-  
-  return { lastId: action.id, ...state}
-  // throw Error("unknown action type")
 }
 
 //===========================
@@ -416,7 +413,6 @@ function defaultReducer(state, action) {
 
 function App() {
   const [shift, setShift] = useState({ x: 0, y: 0 })
-  const [isEditing, setEditing] = useState(false)
 
   const [state, dispatch] = useReducer(defaultReducer, {
     mode: {
@@ -427,19 +423,8 @@ function App() {
     
   })
 
-
-  useEffect(() => {
-    console.log({state})
-
-  }, [state])
-  const ref = useRef(null)
-
-  // useEffect(() => {
-  //   console.log({ref})
-  // }, [])
-
   const shiftChanger = ({x, y}) => {
-    if (isEditing) return
+    if (state.mode.editing) return
 
     setShift({
       x: x + shift.x,
@@ -449,9 +434,8 @@ function App() {
 
 
   return <>
-  <>{JSON.stringify({isEditing, shift})}</>
-  
-      <Toolbar setEditing={setEditing} isEditing={isEditing}></Toolbar>
+      <>{JSON.stringify({state, shift})}</>
+      <Toolbar dispatch={dispatch} state={state}></Toolbar>
       <Field onDrag={shiftChanger} >
         <MovableField shift={shift}>
           <Grid dispatch={dispatch}>
