@@ -63,7 +63,7 @@ export function MovableField({ state, children }) {
     top: shift.y,
     left: shift.x,
 
-    backgroundColor: 'red'
+    backgroundColor: '#e1df9b'
   }
   return <div style={style}> 
     {children}
