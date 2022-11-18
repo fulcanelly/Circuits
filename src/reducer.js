@@ -2,6 +2,8 @@
 // State managment
 //===========================
 import * as R from 'ramda'
+import { set } from 'ramda'
+import { buildPath } from './utils'
 
 let id = 0 
 
@@ -53,13 +55,12 @@ export function sendToggleEditing(dispatch) {
 }
 
 export function handleToggleEditing(state, action) {
-  return {
-    ...state, 
-    mode: { 
-      ...state.mode, 
-      editing: ! state.mode.editing 
-    }
-  }
+  const modeEditingLens = R.lensPath(
+    buildPath(_ => _.mode.editing)
+  )
+
+  let lastEditingState = R.view(modeEditingLens, state)
+  return R.set(modeEditingLens, !lastEditingState, state)
 }
 
 export function handleTileClick(state, action) {
@@ -79,6 +80,9 @@ export function handleMouseWheel(state, action) {
   if (state.mode.editing) return state
 
   const deltaY = action.deltaY
+  const fieldScaleLens = R.lensPath(
+    buildPath(_ => _.field.scale)
+  )
 
   function getNewScale() {
     let currentScale = state.field.scale
@@ -90,28 +94,26 @@ export function handleMouseWheel(state, action) {
     }
   }
 
-  return {
-    ...state,
-    field: {
-      ...state.field,
-      scale: getNewScale()
-    }
-  } 
+  return R.set(
+    fieldScaleLens, getNewScale(), state)
 }
+
 
 export function handleShiftChange(state, action) {
   if (state.mode.editing) return state
 
-  return {
-    ...state,
-    field: {
-      ...state.field,
-      shift: {
-        x: action.diff.x + state.field.shift.x,
-        y: action.diff.y + state.field.shift.y
-      }
-    }
+  const fieldStateLens = R.lensPath(
+    buildPath(_ => _.field.shift)
+  )
+
+  const oldShift = R.view(fieldStateLens, state)
+  
+  const update = {
+    x: action.diff.x + oldShift.x,
+    y: action.diff.y + oldShift.y
   }
+  
+  return R.set(fieldStateLens, update, state)
 }
 
 export function defaultReducer(state, action) {
