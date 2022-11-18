@@ -10,93 +10,13 @@ const settings = {
   gridSize: 6
 }
 
-function SpecialDiv({children}) {
-
-  const [shift, setShift] = useState({ x: 0, y: 0 })
-  const [holden, setHolden] = useState(false)
-  const [scale, setScale] = useState(1)
-
-
-  const style = {
-    position: 'absolute',
-    userDrag: 'none',
-    userSelect: 'none',
-
-    top: shift.y,
-    left: shift.x,
-
-    height: '100px',
-    width: '100px',
-
-    transform: `scale(${scale})`,
-
-    backgroundColor: holden ? 'green' : 'red',
-    zIndex: holden ? '1' : '0'
-
-  }
-
-  const onMouseDown = (mouseDownEvent) => {
-    setHolden(true)
-  }
-
-  const onMouseMove = (mouseMoveEvent) => {
-    if (!holden) return
-    setShift({ 
-      x: shift.x + mouseMoveEvent.movementX,
-      y: shift.y + mouseMoveEvent.movementY 
-    })
-  }
-
-  const onLoseMouse = () => {
-    setHolden(false)
-  }
-
-
-  // canvas.onmouseup = () => {
-  //   state.pressed = false
-  // }
-
-  // canvas.onmouseleave = () => {
-  //   state.pressed = false
-  // }
-
-  const onWheel = ({ deltaY }) => {
-    console.log(scale)
-    if (scale <= 0.5) {
-      return 
-    }
-
-    if (deltaY > 0) {
-      setScale(scale * 1.1)
-    } else {
-      setScale(scale * 0.9)
-    }
-  }
-
-  return (
-    <div 
-      id='loli' 
-      onWheel={onWheel}
-      onMouseDown={onMouseDown} 
-
-      onMouseMove={onMouseMove}
-      
-      onMouseLeave={onLoseMouse}
-      onMouseUp={onLoseMouse}
-      
-      style={style} className="App">
-      {children}
-    </div>
-  );
-}
-
 
 //===========================
 // Interface
 //===========================
 
 
-function Field({children, onDrag}) {
+function Field({ dispatch, children }) {
 
   const [holden, setHolden] = useState(false)
 
@@ -107,16 +27,19 @@ function Field({children, onDrag}) {
 
   const onMouseMove = (mouseMoveEvent) => {
     if (!holden) return
-    onDrag?.({
+
+    sendShiftChange(dispatch, {
       x: mouseMoveEvent.movementX,
       y: mouseMoveEvent.movementY 
     })
+
   }
 
   const onLoseMouse = () => {
     setHolden(false)
   }
 
+  const onMouseWheel = ({deltaY}) => sendScaleChange(dispatch, deltaY)
 
 
   const fieldStyle = { 
@@ -127,7 +50,7 @@ function Field({children, onDrag}) {
 
   return <div
     onMouseDown={onMouseDown} 
-
+    onWheel={onMouseWheel}
     onMouseMove={onMouseMove}
     
     onMouseLeave={onLoseMouse}
@@ -137,13 +60,14 @@ function Field({children, onDrag}) {
 }
 
  
-function MovableField({ shift, children }) {
-  shift = shift ?? { x: 0, y: 0 }
+function MovableField({  state, children }) {
+  let shift = state.field.shift
 
   const style = {
     position: 'relative',
     userDrag: 'none',
     userSelect: 'none',
+    transform: `scale(${state.field.scale})`,
 
     height: `${settings.cellSize * settings.gridSize}px`,
     width: `${settings.cellSize * settings.gridSize}px`,
@@ -213,14 +137,11 @@ function Grid({ dispatch, state, children }) {
   
   const handleMouseClick = (event) => {
     if (selected) {
-      sendClickEvent(dispatch, selected)
-      console.log("mouse click nah!=")
-     // dispatch({})
+      sendTileClickEvent(dispatch, selected)
     }
   }
 
   const handleMouseLeave = (event) => {
-    console.log("LEAVE")
     setSelected(null)
   }
 
@@ -229,15 +150,12 @@ function Grid({ dispatch, state, children }) {
       x: event.nativeEvent.layerX,
       y: event.nativeEvent.layerY
     }
-
-    console.log(event)
-    console.log({pos})
-
     drawMouseHover(pos)
     
-    ///
+    //
+    const native = event.nativeEvent
     const [x, y] = [
-      event.nativeEvent.layerX, event.nativeEvent.layerY
+      native.layerX, native.layerY
     ].map(it => Math.floor(it / settings.cellSize))
 
     setSelected({x, y})
@@ -306,9 +224,8 @@ function WireCircuit({ rotation, powered, wireType }) {
 }
 
 
-
 function ButtonCircuit({ rotation, pressed }) {
-
+  //TODO
 }
 
 function Positioned({pos, children}) {
@@ -351,9 +268,22 @@ function CircuitComposer({state}) {
 
 let id = 0 
 
-function sendClickEvent(dispatch, pos) {
+
+function sendScaleChange(dispatch, deltaY) {
   dispatch({
-    type: 'click',
+    type: 'scale_change', deltaY
+  })
+}
+
+function sendShiftChange(dispatch, diff) {
+  dispatch({
+    type: 'shift_change', diff
+  })
+}
+
+function sendTileClickEvent(dispatch, pos) {
+  dispatch({
+    type: 'tile_click',
     pos: pos,
     id: id++
   })
@@ -378,7 +308,7 @@ function handleToggleEditing(state, action) {
   }
 }
 
-function handleMouseClick(state, action) {
+function handleTileClick(state, action) {
   if (!state.mode.editing) {
     return state
   }
@@ -391,17 +321,56 @@ function handleMouseClick(state, action) {
   }
 }
 
+function handleMouseWheel(state, action) {
+  if (state.mode.editing) return state
 
-function defaultReducer(state, action) {
-  console.log(state)
+  const deltaY = action.deltaY
 
-  if (state.lastId == action.id) {
-    return state
+  function getNewScale() {
+    let currentScale = state.field.scale
+
+    if (deltaY > 0) {
+      return currentScale * 1.1
+    } else {
+      return currentScale * 0.9
+    }
   }
 
+  return {
+    ...state,
+    field: {
+      ...state.field,
+      scale: getNewScale()
+    }
+  } 
+}
+
+function handleShiftChange(state, action) {
+  if (state.mode.editing) return state
+
+  return {
+    ...state,
+    field: {
+      ...state.field,
+      shift: {
+        x: action.diff.x + state.field.shift.x,
+        y: action.diff.y + state.field.shift.y
+      }
+    }
+  }
+}
+
+function defaultReducer(state, action) {
+
+  // if (state.lastId == action.id) {
+  //   return state
+  // }
+
   return R.cond([
-    [R.propEq('type', 'click'), R.curry(handleMouseClick)(state)],
+    [R.propEq('type', 'tile_click'), R.curry(handleTileClick)(state)],
     [R.propEq('type', 'edit'), R.curry(handleToggleEditing)(state)],
+    [R.propEq('type', 'shift_change'), R.curry(handleShiftChange)(state)],
+    [R.propEq('type', 'scale_change'), R.curry(handleMouseWheel)(state)],
     [R.T, R.always(state)]
   ])(action)
 
@@ -411,38 +380,35 @@ function defaultReducer(state, action) {
 // App
 //===========================
 
-function App() {
-  const [shift, setShift] = useState({ x: 0, y: 0 })
 
-  const [state, dispatch] = useReducer(defaultReducer, {
+function initState() {
+  return {
     mode: {
       editing: false
     },
+    
+    field: {
+      scale: 1, 
+      shift: { x: 0, y: 0 }
+    },
 
     cells: [],
-    
-  })
-
-  const shiftChanger = ({x, y}) => {
-    if (state.mode.editing) return
-
-    setShift({
-      x: x + shift.x,
-      y: y + shift.y
-    })
   }
+}
 
+function App() {
+
+  const [state, dispatch] = useReducer(defaultReducer, initState())
 
   return <>
-      <>{JSON.stringify({state, shift})}</>
+      <>{JSON.stringify({state})}</>
       <Toolbar dispatch={dispatch} state={state}></Toolbar>
-      <Field onDrag={shiftChanger} >
-        <MovableField shift={shift}>
+      <Field dispatch={dispatch} >
+        <MovableField state={state}>
           <Grid dispatch={dispatch}>
             <CircuitComposer state={state}></CircuitComposer>
           </Grid>
         </MovableField>
-
       </Field>
     </>
   }
