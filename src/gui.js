@@ -114,7 +114,7 @@ export function Grid({ dispatch, children }) {
     const ctx = canvas.getContext('2d')
    
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    ctx.fillStyle = '#4a8497'
+    ctx.fillStyle = 'rgba(74, 132, 151, 0.5)'
 
     const [x_, y_] = [x / 50, y / 50].map(Math.floor)
 
