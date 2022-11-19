@@ -17,7 +17,7 @@
  *  R.lensPath(buildPath(_ => _.a.b.c))
  *  
  * @param {(proxy: Proxy) => Proxy} handler 
- * @returns {[string]}
+ * @returns {[string | number]}
  */
 export function buildPath(handler) {
   let path = []
@@ -28,5 +28,5 @@ export function buildPath(handler) {
     }
   })
   handler(proxy)
-  return path
+  return path.map(item => isNaN(item) ? item : Number(item)) 
 }
