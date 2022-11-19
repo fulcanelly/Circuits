@@ -22,10 +22,33 @@ export function initState() {
 
     cells: [],
 
+    selected: {
+      index: null, 
+      entry: null
+    }
     //pick:
   }
 }
 
+
+export function sendSelectTool(dispatch, entry, index) {
+  dispatch({
+    type: 'select_tool', 
+    entry, index
+  })
+}
+
+function handleSelectTool(state, action) {
+  let selectedIndexLens = R.lensPath(
+    buildPath(_ => _.selected.index))
+  
+  let selectedEntryLens = R.lensPath(
+    buildPath(_ => _.selected.entry))
+
+  return R.set(
+    selectedEntryLens, action.entry, R.set(
+      selectedIndexLens, action.index, state))
+}
   
 export function sendScaleChange(dispatch, deltaY) {
   dispatch({
@@ -116,12 +139,16 @@ export function handleShiftChange(state, action) {
   return R.set(fieldStateLens, update, state)
 }
 
+
 export function defaultReducer(state, action) {
   return R.cond([
-    [R.propEq('type', 'tile_click'), R.curry(handleTileClick)(state)],
-    [R.propEq('type', 'edit'), R.curry(handleToggleEditing)(state)],
-    [R.propEq('type', 'shift_change'), R.curry(handleShiftChange)(state)],
-    [R.propEq('type', 'scale_change'), R.curry(handleMouseWheel)(state)],
+    [R.propEq('type', 'tile_click'),       handleTileClick],
+    [R.propEq('type', 'edit'),         handleToggleEditing],
+    [R.propEq('type', 'shift_change'),   handleShiftChange],
+    [R.propEq('type', 'scale_change'),    handleMouseWheel],
+    [R.propEq('type', 'select_tool'),     handleSelectTool],
     [R.T, R.always(state)]
-  ])(action)
+  ]
+  .map(([cond, handler]) => [cond,  R.curry(handler)(state)]))
+    (action)
 }

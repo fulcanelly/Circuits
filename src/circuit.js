@@ -195,6 +195,27 @@ export function PlaceholderCircuit() {
   return <div style={style}></div>
 }
 
+/// entries
+export function wireEntry(wireType) {
+  return {
+    position: null,
+    state: {
+        rotation: 0,
+        powered: false,
+        wireType,
+    },
+    cellType: 'wire',
+  }
+} 
+
+export function ShowByEntryCircuit({entry}) {
+  if (entry.cellType == 'wire') {
+    return <AWireCircuit state={entry.state}></AWireCircuit>
+  }
+  return <></>
+}
+
+
 // helper to identify circuit components by it's entry
 export function keyOfCType(entry) {
   return `${entry.x}_${entry.y}`

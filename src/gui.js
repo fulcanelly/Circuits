@@ -1,7 +1,8 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { sendScaleChange, sendShiftChange, sendTileClickEvent, sendToggleEditing } from './reducer';
+import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, sendToggleEditing } from './reducer';
 import { settings } from './settings';
 import { Button, Switch } from '@mui/material';
+import { AWireCircuit, ShowByEntryCircuit, wireEntry } from './circuit';
 
 //===========================
 // Interface
@@ -70,26 +71,11 @@ export function MovableField({ state, children }) {
   </div>
 }
 
-
-
 // helper function to adjust canvas resolution
 export function resizeCanvas(canvas) {
   const { width, height } = canvas.getBoundingClientRect()
-  console.log({
-    width, height
-  })
-
-  if (canvas.width !== width || canvas.height !== height) {
-  //  const { devicePixelRatio:ratio=1 } = window
-    let ratio = 1
-    const context = canvas.getContext('2d')
-    canvas.width = width*ratio
-    canvas.height = height*ratio
-    context.scale(ratio, ratio)
-    return true
-  }
-
-  return false
+  canvas.width = width
+  canvas.height = height
 }
 
 //main component where all circuits should be located in
@@ -166,7 +152,8 @@ export function Grid({ dispatch, children }) {
 ///component containing control data 
 export function Toolbar({dispatch, state}) {
   const style = {
-    height: '50px',
+    height: '100px',
+    display: 'flex'
   }
 
   const toggleEditing = () => {
@@ -179,5 +166,51 @@ export function Toolbar({dispatch, state}) {
       onChange={toggleEditing} 
       variant="outlined"
     > </Switch>
+    <ToolSelector 
+      dispatch={dispatch}
+      state={state}
+    ></ToolSelector>
   </div>
+}
+
+
+function SelectableItem({selected, onSelect, children}) {
+  const style = {
+    padding: '10px',
+    border: selected ? '3px solid' : '',
+    maxHeight: `${settings.cellSize * 1.1}px`
+  }
+  
+  return <div onClick={onSelect ?? (() => [])} style={style}>
+    {children}
+  </div>
+}
+
+
+export function ToolSelector({dispatch, state}) {
+  const style = {
+    display: 'flex',
+    flexShrink: '2',
+  }
+  
+  const entryList = [
+    wireEntry(0),
+    wireEntry(1),
+    wireEntry(2),
+    wireEntry(3),
+  ]
+
+  const isSelected = i => (state.selected.index == i)
+  
+  return <div style={style}>
+      {entryList.map(
+        (entry, i) => <SelectableItem 
+          key={i} 
+          onSelect={sendSelectTool.bind({}, dispatch, entryList[i], i)}
+          selected={isSelected(i)}
+          >
+            <ShowByEntryCircuit entry={entry}/>
+          </SelectableItem>)}    
+    </div>
+ 
 }
