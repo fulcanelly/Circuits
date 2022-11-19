@@ -10,8 +10,8 @@ import * as R from 'ramda'
 // Common canvas tile utils 
 //==============================
 
-function fillCellBackground(ctx) {
-  ctx.fillStyle = settings.colors.background
+function fillCellBackground(ctx, color) {
+  ctx.fillStyle = color ?? settings.colors.background
   ctx.fillRect(0, 0, settings.cellSize, settings.cellSize)
 }
 
@@ -74,6 +74,23 @@ export function draw90DegBendWire(ctx, color) {
   ctx.fillRect(0, sizes[0], settings.cellSize * 0.6, sizes[1])
 }
 
+
+export function drawPowerSource(ctx) {
+  fillCellBackground(ctx, settings.colors.idleWire)
+
+  const cellSize = settings.cellSize
+
+  ctx.fillStyle = settings.colors.poweredWire
+
+  const length = (1 - 0.2 * 2) * cellSize
+
+
+  ctx.fillRect(
+    0.2 * cellSize, 0.2 * cellSize, length, length
+  )
+
+}
+
 function cellSizeStyles() {
   return {
     width: `${settings.cellSize + 1}px`,
@@ -84,6 +101,43 @@ function cellSizeStyles() {
 function rotationToTransform(rotation) {
   let deg = (rotation % 4) * 90
   return `rotate(${deg}deg)`
+}
+
+export function Void({}) {
+  const canvasRef = useRef(null)
+
+  const style = {
+    ...cellSizeStyles(),
+  }
+
+  useEffect(() => {
+    adjustTileCanvasSize(canvasRef)
+    fillCellBackground(getCanvasCtx(canvasRef))
+  },[])
+
+  return <canvas 
+    ref={canvasRef}
+    style={style}>
+  </canvas>
+}
+
+
+export function PowerSource({}) {
+  const canvasRef = useRef(null)
+
+  const style = {
+    ...cellSizeStyles(),
+  }
+
+  useEffect(() => {
+    adjustTileCanvasSize(canvasRef)
+    drawPowerSource(getCanvasCtx(canvasRef))
+  },[])
+
+  return <canvas 
+    ref={canvasRef}
+    style={style}>
+  </canvas>
 }
 
 
@@ -168,7 +222,7 @@ export function voidEntry() {
   }
 }
 
-export function powerSource() {
+export function powerSourceEntry() {
   return {
     position: null, 
     state: {
@@ -183,6 +237,12 @@ export function ShowByEntryCircuit({entry}) {
   if (entry.cellType == 'wire') {
     return <WireCircuit state={entry.state}></WireCircuit>
   }
+  if (entry.cellType == 'power') {
+    return <PowerSource/>
+  } 
+  if (entry.cellType == 'void') {
+    return <Void/>
+  } 
   return <></>
 }
 
@@ -194,7 +254,6 @@ export function keyOfCType(entry) {
 
 // component responsible for placing circuit in the right point
 export function CircuitComposer({state}) {
-  useEffect(() => console.log("FFF"), [state.cells])
   return <div>
     {state.cells.map(
       entry => <Positioned key={keyOfCType(entry)} pos={entry.position}>

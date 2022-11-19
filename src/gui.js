@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, sendTileHover, sendToggleEditing } from './reducer';
 import { settings } from './settings';
 import { Switch } from '@mui/material';
-import { ShowByEntryCircuit, wireEntry } from './circuit';
+import { powerSourceEntry, ShowByEntryCircuit, voidEntry, wireEntry } from './circuit';
 
 //===========================
 // Interface
@@ -195,10 +195,12 @@ export function ToolSelector({dispatch, state}) {
   }
   
   const entryList = [
+    voidEntry(),
     wireEntry(0),
     wireEntry(1),
     wireEntry(2),
     wireEntry(3),
+    powerSourceEntry()
   ]
 
   const isSelected = i => (state.selected.index == i)

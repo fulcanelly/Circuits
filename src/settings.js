@@ -1,6 +1,6 @@
 export const settings = {
     cellSize: 50, 
-    gridSize: 6,
+    gridSize: 8,
 
     colors: {
         background: '#d3d074',

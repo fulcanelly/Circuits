@@ -108,21 +108,35 @@ export function handleTileClick(state, action) {
     return state
   } 
 
-  const newTile = {
-    ...state.selected.entry,
-    position: action.pos 
-  }
+  //void is special tile type so it means remove current tile
+  if (state.selected.entry.cellType == 'void') {
+    const cells = [
+      ...state.cells.filter(
+        item => JSON.stringify(item.position) != JSON.stringify(action.pos) 
+      )
+    ]
+    
+    return {
+      ...state, cells
+    }
+  } else {
+    //else add tile of that type
 
+    const newTile = {
+      ...state.selected.entry,
+      position: action.pos 
+    }
 
-  const cells = [
-    newTile, 
-    ...state.cells.filter(
-      item => JSON.stringify(item.position) != JSON.stringify(newTile.position) 
-    )
-  ]
-
-  return {
-    ...state, cells
+    const cells = [
+      newTile, 
+      ...state.cells.filter(
+        item => JSON.stringify(item.position) != JSON.stringify(action.pos) 
+      )
+    ]
+  
+    return {
+      ...state, cells
+    }
   }
 }
 
