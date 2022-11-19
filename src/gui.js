@@ -1,8 +1,8 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, sendTileHover, sendToggleEditing } from './reducer';
 import { settings } from './settings';
-import { Button, Switch } from '@mui/material';
-import { AWireCircuit, ShowByEntryCircuit, wireEntry } from './circuit';
+import { Switch } from '@mui/material';
+import { ShowByEntryCircuit, wireEntry } from './circuit';
 
 //===========================
 // Interface

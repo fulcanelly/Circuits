@@ -2,7 +2,6 @@
 // State managment
 //===========================
 import * as R from 'ramda'
-import { set } from 'ramda'
 import { buildPath } from './utils'
 
 let id = 0 

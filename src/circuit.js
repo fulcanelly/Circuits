@@ -1,7 +1,6 @@
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { settings } from './settings';
 import * as R from 'ramda'
-import { resizeCanvas } from './gui';
 
 //===========================
 // Circuit components
@@ -88,7 +87,7 @@ function rotationToTransform(rotation) {
 }
 
 
-export function AWireCircuit({ state: { powered, wireType, rotation} }) {
+export function WireCircuit({ state: { powered, wireType, rotation} }) {
   const canvasRef = useRef(null)
 
   const style = {
@@ -159,11 +158,30 @@ export function wireEntry(wireType) {
   }
 } 
 
+export function voidEntry() {
+  return {
+    position: null, 
+    state: {
+      rotation: null, 
+    },
+    cellType: 'void'
+  }
+}
+
+export function powerSource() {
+  return {
+    position: null, 
+    state: {
+      rotation: 0
+    },
+    cellType: 'power'
+  }
+}
 
 // component responsible for dispatching circuit
 export function ShowByEntryCircuit({entry}) {
   if (entry.cellType == 'wire') {
-    return <AWireCircuit state={entry.state}></AWireCircuit>
+    return <WireCircuit state={entry.state}></WireCircuit>
   }
   return <></>
 }

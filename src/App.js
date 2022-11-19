@@ -1,8 +1,5 @@
-import logo from './logo.svg';
 import './App.css';
-import { useEffect, useReducer, useRef, useState } from 'react';
-import { height, margin } from '@mui/system';
-import * as R from 'ramda'
+import { useReducer } from 'react';
 import { defaultReducer, initState } from './reducer';
 import { Field, Grid, MovableField, Toolbar } from './gui';
 import { CircuitComposer } from './circuit';
