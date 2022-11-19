@@ -218,15 +218,16 @@ export function ShowByEntryCircuit({entry}) {
 
 // helper to identify circuit components by it's entry
 export function keyOfCType(entry) {
-  return `${entry.x}_${entry.y}`
+  return JSON.stringify(entry)
 }
 
 // component responsible for dispatching circuit type and placing in right point
 export function CircuitComposer({state}) {
+  useEffect(() => console.log("FFF"), [state.cells])
   return <div>
     {state.cells.map(
-      it => <Positioned key={keyOfCType(it)} pos={it}>
-        <WireCircuit/>
+      entry => <Positioned key={keyOfCType(entry)} pos={entry.position}>
+        <ShowByEntryCircuit entry={entry}/>
       </Positioned>) }
   </div>
 }

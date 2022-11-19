@@ -91,11 +91,26 @@ export function handleTileClick(state, action) {
     return state
   }
 
+  if (!state.selected.entry) {
+    //TODO may be add warning (select item)
+    return state
+  } 
+
+  const newTile = {
+    ...state.selected.entry,
+    position: action.pos 
+  }
+
+
+  const cells = [
+    newTile, 
+    ...state.cells.filter(
+      item => JSON.stringify(item.position) != JSON.stringify(newTile.position) 
+    )
+  ]
+
   return {
-    ...state, 
-    cells: R.uniqWith(
-      R.eqBy(JSON.stringify), 
-      [...state.cells, action.pos])
+    ...state, cells
   }
 }
 
