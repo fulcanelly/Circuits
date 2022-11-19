@@ -84,8 +84,8 @@ export function Grid({ dispatch, children }) {
   const [selected, setSelected] = useState()
 
   const style = {
-    width: '300px',
-    height: '300px',
+    width: `${settings.cellSize * settings.gridSize}px`,
+    height: `${settings.cellSize * settings.gridSize}px`,
     position: 'absolute'
   }
 
