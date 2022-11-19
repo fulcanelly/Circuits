@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, sendToggleEditing } from './reducer';
+import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, sendTileHover, sendToggleEditing } from './reducer';
 import { settings } from './settings';
 import { Button, Switch } from '@mui/material';
 import { AWireCircuit, ShowByEntryCircuit, wireEntry } from './circuit';
@@ -8,7 +8,7 @@ import { AWireCircuit, ShowByEntryCircuit, wireEntry } from './circuit';
 // Interface
 //===========================
 
-//it's a main component which used to setup scale / move listeners 
+//it's a main component which used to setup wheel / mouse move listeners 
 export function Field({ dispatch, children }) {
   const [holden, setHolden] = useState(false)
   
@@ -96,6 +96,7 @@ export function Grid({ dispatch, children }) {
   
   const drawMouseHover = ({x, y}) => {
 
+    sendTileHover(dispatch, selected)
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
    
