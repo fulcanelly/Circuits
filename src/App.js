@@ -3,7 +3,7 @@ import { useReducer } from 'react';
 import { defaultReducer, initState } from './reducer';
 import { Field, Grid, MovableField, Toolbar } from './gui';
 import { CircuitComposer } from './circuit';
-
+import ReactJson from 'react-json-view'
 
 
 //===========================
@@ -16,7 +16,7 @@ function App() {
   const [state, dispatch] = useReducer(defaultReducer, initState())
 
   return <>
-      <>{JSON.stringify({state})}</>
+      <ReactJson collapsed={true} src={state} />
       <Toolbar dispatch={dispatch} state={state}></Toolbar>
       <Field dispatch={dispatch} >
         <MovableField state={state}>
