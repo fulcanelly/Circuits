@@ -75,27 +75,6 @@ export function draw90DegBendWire(ctx, color) {
   ctx.fillRect(0, sizes[0], settings.cellSize * 0.6, sizes[1])
 }
 
-
-function setupDrawersTest(ref) {
-  let current = 0
-  let drawers = [
-    draw90DegBendWire,
-    drawThreeWayWire,
-    drawCrossWire,
-    drawStraightWire
-  ]
-
-  let redraw = () => {
-    adjustTileCanvasSize(ref)
-    current++ 
-    drawers[current % 4](getCanvasCtx(ref), settings.colors.idleWire)
-  }
-
-  let interval = setInterval(redraw, 1000)
-
-  return () => clearInterval(interval) 
-}
-
 function cellSizeStyles() {
   return {
     width: `${settings.cellSize + 1}px`,
@@ -103,14 +82,11 @@ function cellSizeStyles() {
   }
 }
 
-
 function rotationToTransform(rotation) {
   let deg = (rotation % 4) * 90
   return `rotate(${deg}deg)`
 }
 
-
-//example return <AWireCircuit state={{powered: false, rotation: 1, wireType: 2}}></AWireCircuit>
 
 export function AWireCircuit({ state: { powered, wireType, rotation} }) {
   const canvasRef = useRef(null)
@@ -142,31 +118,6 @@ export function AWireCircuit({ state: { powered, wireType, rotation} }) {
   </canvas>
 }
 
-
-//TODO remove
-export function WireCircuit({ rotation, powered, wireType }) {
-  const canvasRef = useRef(null)
-
-  const style = {
-    width: `${settings.cellSize + 1}px`,
-    height: `${settings.cellSize + 1}px`,
-  //  transform: "rotate(90deg)"
-  }
-
-  let drawWire = () => {
-    adjustTileCanvasSize(canvasRef)
-    draw90DegBendWire(
-      getCanvasCtx(canvasRef))
-  }
-
-  useEffect(() => setupDrawersTest(canvasRef), [])
-
-  return <canvas 
-    ref={canvasRef}
-    style={style}>
-  </canvas>
-   
-}
 
 export function ButtonCircuit({ rotation, pressed }) {
   //TODO
@@ -208,6 +159,8 @@ export function wireEntry(wireType) {
   }
 } 
 
+
+// component responsible for dispatching circuit
 export function ShowByEntryCircuit({entry}) {
   if (entry.cellType == 'wire') {
     return <AWireCircuit state={entry.state}></AWireCircuit>
@@ -221,7 +174,7 @@ export function keyOfCType(entry) {
   return JSON.stringify(entry)
 }
 
-// component responsible for dispatching circuit type and placing in right point
+// component responsible for placing circuit in the right point
 export function CircuitComposer({state}) {
   useEffect(() => console.log("FFF"), [state.cells])
   return <div>
