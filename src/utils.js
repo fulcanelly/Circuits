@@ -1,4 +1,5 @@
 
+import * as R from 'ramda'
 
 //**
 //  * 
@@ -29,4 +30,25 @@ export function buildPath(handler) {
   })
   handler(proxy)
   return path.map(item => isNaN(item) ? item : Number(item)) 
+}
+
+
+
+export function isMatch(pattern, object) {
+  if (!object) {
+    return false
+  }
+
+  const checker = ([key, value]) => {
+    if (value instanceof Object) {
+      return isMatch(value, object[key])
+    } else {
+      return R.equals(object[key], value)
+    }
+  }
+
+  return R.all(
+    R.equals(true), 
+    Object.entries(pattern)
+      .map(checker))
 }
