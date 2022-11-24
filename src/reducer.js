@@ -2,6 +2,7 @@
 // State managment
 //===========================
 import * as R from 'ramda'
+import { genDebugCellFor, genDebugCellsFor, updateState } from './engine'
 import { buildPath } from './utils'
 
 let id = 0 
@@ -36,6 +37,13 @@ export function sendSelectTool(dispatch, entry, index) {
   dispatch({
     type: 'select_tool', 
     entry, index
+  })
+}
+
+
+export function sendCellsUpdate(dispatch) {
+  dispatch({
+    type: 'cells_update'
   })
 }
 
@@ -129,6 +137,8 @@ export function handleTileClick(state, action) {
 
     const cells = [
       newTile, 
+    //  genDebugCellFor(action.pos),
+     // ...genDebugCellsFor(action.pos),
       ...state.cells.filter(
         item => JSON.stringify(item.position) != JSON.stringify(action.pos) 
       )
@@ -216,6 +226,10 @@ export function handleShiftChange(state, action) {
 }
 
 
+export function handleCellsUpdate(state, action) {
+  return updateState(state)
+}
+
 export function defaultReducer(state, action) {
   return R.cond([
     [R.propEq('type', 'tile_click'),       handleTileClick],
@@ -224,7 +238,8 @@ export function defaultReducer(state, action) {
     [R.propEq('type', 'scale_change'),    handleMouseWheel],
     [R.propEq('type', 'select_tool'),     handleSelectTool],
     [R.propEq('type', 'tile_hover'),       handleTileHover],
-    [R.T, R.always(state)]
+    [R.propEq('type', 'cells_update'),   handleCellsUpdate],
+    [R.T, R.always(state)],
   ]
   .map(([cond, handler]) => [cond,  R.curry(handler)(state)]))
     (action)
