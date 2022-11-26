@@ -32,8 +32,6 @@ export function buildPath(handler) {
   return path.map(item => isNaN(item) ? item : Number(item)) 
 }
 
-
-
 export function isMatch(pattern, object) {
   if (!object) {
     return false

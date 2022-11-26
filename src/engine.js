@@ -1,5 +1,7 @@
 import * as R from 'ramda'
+//import { buildModelOfState } from './nothing';
 import { debugEntry } from './circuit'
+import { updateCells } from './model';
 import { buildPath, isMatch } from './utils'
 
 
@@ -14,7 +16,8 @@ export function floorMod(a, n) {
   // Return the resultant remainder
   return a - n * q;
 }
- 
+//const s =buildModelOfState
+
 export function rotateTimes(arr, times = 1) {
   let result = arr
   for (let index = 0; index < times; index++) {
@@ -22,6 +25,8 @@ export function rotateTimes(arr, times = 1) {
   }
   return result
 }
+
+const a = R.identity(1)
 
 export function rotateReverseTimes(arr, times = 1) {
   let result = arr 
@@ -68,7 +73,10 @@ function makeHandler({pattern, pinInfo, handler}) {
 //               
 //           pinInfo[1]
 
-
+// 0 - 2 = floorMod(x + 2, 4)
+// 1 - 3
+// 2 - 0
+// 3 - 1
 
 /**
  * 
@@ -106,6 +114,7 @@ function cellDotsFromVisual(visual) {
 }
 
 const datasheets = [
+  
   {
     pattern: {
       cellType: 'wire', 
@@ -136,6 +145,23 @@ const datasheets = [
         pins: rotateTimes(pins, floorMod(rotation, 4))
       }
     }
+
+  },
+  
+  {
+    pattern: {
+      cellType: 'wire', 
+      state: {
+        wireType: 1
+      }
+    }, 
+
+    pinInfo: [
+      pinTypes.bidirect(1),
+      pinTypes.none(),
+      pinTypes.none(),
+      pinTypes.bidirect(1),
+    ],
 
   },
 
@@ -171,17 +197,6 @@ const datasheets = [
 
 export function findDatasheet(cell) {
   return datasheets.find(data => isMatch(data.pattern, cell))
-}
-
-function getInputs(cell) {
-  let datasheet = datasheets.find(data => isMatch(data.pattern, cell))
-  if (datasheet) {
-    let pins = rotateTimes(cell.state.rotation, datasheet.pinInfo)
-
-    
-  } else {
-    throw "hz what to do"
-  }
 }
 
 
@@ -232,9 +247,12 @@ const updater = (pinsCells, cell) => {
  */
 export function updateState(state) {
   const pinsCells = state.cells.map(visualToPins)
+  return R.set(cellsLens, updateCells(pinsCells), state)
+  return state
 
-  return R.set(
-    cellsLens, pinsCells.map(R.curry(updater)(pinsCells)), state)
+
+  // return R.set(
+  //   cellsLens, pinsCells.map(R.curry(updater)(pinsCells)), state)
 }
 
 
