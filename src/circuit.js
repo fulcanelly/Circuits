@@ -141,6 +141,10 @@ export function PowerSource({}) {
 }
 
 
+export function DebugTile({state}) {
+  return <p>{JSON.stringify(state)}</p>
+}
+
 export function WireCircuit({ state: { powered, wireType, rotation} }) {
   const canvasRef = useRef(null)
 
@@ -204,9 +208,9 @@ export function wireEntry(wireType) {
   return {
     position: null,
     state: {
-        rotation: 0,
-        powered: false,
-        wireType,
+      rotation: 0,
+      powered: false,
+      wireType,
     },
     cellType: 'wire',
   }
@@ -232,6 +236,16 @@ export function powerSourceEntry() {
   }
 }
 
+export function debugEntry(i = 'NaN') {
+  return {
+    position: null, 
+    state: {
+      i
+    },
+    cellType: 'debug'
+  }
+}
+
 // component responsible for dispatching circuit
 export function ShowByEntryCircuit({entry}) {
   if (entry.cellType == 'wire') {
@@ -243,6 +257,9 @@ export function ShowByEntryCircuit({entry}) {
   if (entry.cellType == 'void') {
     return <Void/>
   } 
+  if (entry.cellType == 'debug') {
+    return <DebugTile state={entry.state}/>
+  }
   return <></>
 }
 
