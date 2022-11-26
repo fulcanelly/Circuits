@@ -113,6 +113,10 @@ function cellDotsFromVisual(visual) {
   //datasheet.pinInfo
 }
 
+
+const valueLens = R.lensPath(
+    buildPath(_ => _.value))
+
 const datasheets = [
   
   {
@@ -163,6 +167,95 @@ const datasheets = [
       pinTypes.bidirect(1),
     ],
 
+    toPins(cell) {
+      const pins = this.pinInfo.map(it => {
+        if (it.type == 'bidirect') {
+          return R.set(valueLens, Boolean(cell.state.powered), it)
+        } else {
+          return it
+        }
+      })
+
+      const rotation = Number(cell.state.rotation)
+      
+      return {
+        position: cell.position,
+        actual: cell,
+        rotation,
+        pins: rotateTimes(pins, floorMod(rotation, 4))
+      }
+    }
+  },
+
+
+  {
+    pattern: {
+      cellType: 'wire', 
+      state: {
+        wireType: 2
+      }
+    }, 
+
+    pinInfo: [
+      pinTypes.bidirect(1),
+      pinTypes.bidirect(1),
+      pinTypes.none(),
+      pinTypes.bidirect(1),
+    ],
+
+    toPins(cell) {
+      const pins = this.pinInfo.map(it => {
+        if (it.type == 'bidirect') {
+          return R.set(valueLens, Boolean(cell.state.powered), it)
+        } else {
+          return it
+        }
+      })
+
+      const rotation = Number(cell.state.rotation)
+      
+      return {
+        position: cell.position,
+        actual: cell,
+        rotation,
+        pins: rotateTimes(pins, floorMod(rotation, 4))
+      }
+    }
+  },
+
+  {
+    pattern: {
+      cellType: 'wire', 
+      state: {
+        wireType: 3
+      }
+    }, 
+
+    pinInfo: [
+      pinTypes.bidirect(1),
+      pinTypes.bidirect(1),
+      pinTypes.bidirect(1),
+      pinTypes.bidirect(1),
+    ],
+
+    toPins(cell) {
+      const pins = this.pinInfo.map(it => {
+        if (it.type == 'bidirect') {
+          return R.set(valueLens, Boolean(cell.state.powered), it)
+        } else {
+          return it
+        }
+      })
+
+      const rotation = Number(cell.state.rotation)
+      
+      return {
+        position: cell.position,
+        actual: cell,
+        rotation,
+        pins: rotateTimes(pins, floorMod(rotation, 4))
+      }
+    }
   },
 
   {
