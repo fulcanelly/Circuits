@@ -1,7 +1,7 @@
 import * as R from 'ramda'
 //import { buildModelOfState } from './nothing';
 import { debugEntry } from './circuit'
-import { updateCells } from './model';
+import { Cell, PinCell, PinInfo, Position, updateCells } from './model';
 import { buildPath, isMatch } from './utils'
 
 
@@ -38,19 +38,19 @@ export function rotateReverseTimes(arr, times = 1) {
 
 
 const pinTypes = new class {
-  output(id) {
+  output(id: any = null): PinInfo {
     return {type: 'output'}
   }
 
-  bidirect(id) {
+  bidirect(id: any = null): PinInfo {
     return {type: 'bidirect'}
   }
 
-  input(id) {
+  input(id: any = null): PinInfo {
     return {type: 'input'}
   }
   
-  none() {
+  none(id: any = null): PinInfo {
     return {type: 'none'}
   }
 }
@@ -117,7 +117,16 @@ function cellDotsFromVisual(visual) {
 const valueLens = R.lensPath(
     buildPath(_ => _.value))
 
-const datasheets = [
+
+
+export type Datasheet = {
+    pattern: any,
+    pinInfo: PinInfo[],
+    toPins: (cell: any) => PinCell
+  }
+
+//TODO: apply DRY
+const datasheets: Datasheet[] = [
   
   {
     pattern: {
@@ -260,6 +269,40 @@ const datasheets = [
 
   {
     pattern: {
+      cellType: 'not'
+    },
+
+    pinInfo: [
+      pinTypes.none(),
+      pinTypes.input(1),
+      pinTypes.none(),
+      pinTypes.output(1),
+
+    ],
+
+    toPins(cell) {
+      const pins = this.pinInfo.map(it => {
+        if (it.type == 'output') {
+          return R.set(valueLens, Boolean(cell.state.powered), it)
+        } else {
+          return it
+        }
+      })
+      const rotation = Number(cell.state.rotation)
+
+      return {
+        position: cell.position,
+        actual: cell,
+        rotation,
+        about: this,
+        pins: rotateTimes(pins, floorMod(rotation, 4))
+      }
+    } 
+
+  },
+
+  {
+    pattern: {
       cellType: 'power'
     },
 
@@ -284,6 +327,8 @@ const datasheets = [
     }
   }
 
+
+
 ]
 
 
@@ -294,8 +339,7 @@ export function findDatasheet(cell) {
 
 
 export function visualToPins(cell) {
-  const datasheet = findDatasheet(cell)
-  return datasheet.toPins(cell)
+  return findDatasheet(cell)!.toPins(cell)
 }
 
     
@@ -359,15 +403,15 @@ export function copyPositionedAt(entry, position) {
   return R.set(positionLens, position, entry)
 }
 
-export function genDebugCellsFor(pos) {
-  return getNeighbours(pos)
-    .map(position => copyPositionedAt(
-        debugEntry(position), position))
-}
+// export function genDebugCellsFor(pos) {
+//   return getNeighbours(pos)
+//     .map(position => copyPositionedAt(
+//         debugEntry(position), position))
+// }
 
-export function genDebugCellFor(pos) {
-  return getNeighbours(pos)
-    .map(position => copyPositionedAt(
-        debugEntry(position), position))[2]
-}
+// export function genDebugCellFor(pos) {
+//   return getNeighbours(pos)
+//     .map(position => copyPositionedAt(
+//         debugEntry(position), position))[2]
+// }
 
