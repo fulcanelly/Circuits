@@ -156,7 +156,6 @@ export function findWires(tiles: PinCell[]): [Wire[], PinCell[]]{
         }
     }
 
-    console.log(wires)
     return [wires, tiles]
 }
 
@@ -182,7 +181,6 @@ export function updateCells(cells: PinCell[]): Cell[] {
         const powered = wire.inputs.some(
             input => getValueAt(rest, input)
         )
-        console.log({powered})
 
         wire.powered = powered
 
