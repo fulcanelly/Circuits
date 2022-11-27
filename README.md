@@ -11,10 +11,10 @@ It's a logic gates builder inspired by [Current Circuit Builder](https://m.apkpu
 # TODO 
 
 ## Plans: 
-* Use array instead of using .find 
+* Use array instead of .find 
 * Chunks
 * Cache wires 
-* Ad chips
+* Add chips
 
 ## Bugfixes :
 * fix related to [getNearWithTouchingIndex2](./src/engine.ts) problem 
