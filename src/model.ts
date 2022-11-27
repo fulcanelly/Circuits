@@ -1,8 +1,7 @@
 
 import { initState } from "./reducer"
 import * as R from 'ramda'
-import { floorMod, getNearWithTouchingIndex } from "./engine"
-
+import { Datasheet, floorMod, getNearWithTouchingIndex } from "./engine"
 
 
 export type Position = { x: number, y: number }
@@ -61,31 +60,30 @@ export type PinCell = {
         actual: Cell
         rotation: number 
         pins: PinInfo[]
+        data: Datasheet
     }
 
 
-type PinIndex = 0 | 1 | 2 | 3
-
-//TODO in type change 'touching to 'index
-function getNearWithTouchingIndexTs(pos: Position): Array<{ position: Position, touching: PinIndex }> {
-    return getNearWithTouchingIndex(pos as any) as any
-}
+export type PinIndex = 0 | 1 | 2 | 3
 
 
-
-function getOppositeIndex(x: number) {
+export function getOppositeIndex(x: number) {
     return floorMod(x + 2, 4)
 }
 
 
-type ConnectionType = {
+export function findByPosition(pool: PinCell[], pos: Position): PinCell | undefined {
+    return pool.find(cell => R.equals(cell.position, pos))
+}
+
+export type ConnectionType = {
         position: Position;
         touching: PinIndex;
         found: PinCell;
     }
 
-function getConnectedTo(pool: PinCell[], center: PinCell): ConnectionType[] {
-    return getNearWithTouchingIndexTs(center.position)
+export function getConnectedTo(pool: PinCell[], center: PinCell): ConnectionType[] {
+    return getNearWithTouchingIndex(center.position)
         .map(near => {
             return {
                 found: pool.find(cell => R.equals(cell.position, near.position))!,
@@ -174,9 +172,8 @@ const actualStatePoweredLens = R.lensPath(["actual", "state", "powered"])
 
 export function updateCells(cells: PinCell[]): Cell[] {
     let [wires, rest] = findWires(cells)
-    let result: Cell[] = []
+    let result: PinCell[] = []
 
-    result.push(...pinCellToCell(rest))
 
     for (let wire of wires) {
         const powered = wire.inputs.some(
@@ -189,10 +186,24 @@ export function updateCells(cells: PinCell[]): Cell[] {
             return R.set(actualStatePoweredLens, powered, cell)
         }) 
 
-        result.push(...pinCellToCell(wireTiles))
+        result.push(...wireTiles)
     }
 
-    return result
+    result.push(...rest)
+
+    const resultCopy = [...result]
+    for (const i in resultCopy) {
+        
+        const gate = resultCopy[i]
+        
+        if (gate.data.update) {
+            result[i] = gate.data.update?.(resultCopy, gate) 
+        }
+
+    }
+
+
+    return pinCellToCell(result)
 
 
 }
