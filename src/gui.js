@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, sendTileHover, sendToggleEditing } from './reducer';
 import { settings } from './settings';
 import { Switch } from '@mui/material';
-import { powerSourceEntry, ShowByEntryCircuit, voidEntry, wireEntry } from './circuit';
+import { notGateEntry, powerSourceEntry, ShowByEntryCircuit, voidEntry, wireEntry } from './circuit';
 
 //===========================
 // Interface
@@ -200,7 +200,8 @@ export function ToolSelector({dispatch, state}) {
     wireEntry(1),
     wireEntry(2),
     wireEntry(3),
-    powerSourceEntry()
+    notGateEntry(),
+    powerSourceEntry(),
   ]
 
   const isSelected = i => (state.selected.index == i)
