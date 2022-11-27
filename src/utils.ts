@@ -21,7 +21,7 @@ type ProxyType = {[key: string]: ProxyType }
  * @param {(proxy: Proxy) => Proxy} handler 
  * 
  */
-export function buildPath(handler: (proxy: ProxyType) => ProxyType): (String | Number)[] {
+export function buildPath(handler: (proxy: ProxyType) => ProxyType): never[] {
   let path: Array<String> = []
   let proxy = new Proxy(path, {
     get(target, string: string, recv) {
@@ -30,7 +30,7 @@ export function buildPath(handler: (proxy: ProxyType) => ProxyType): (String | N
     }
   })
   handler(proxy)
-  return path.map(item => isNaN(item as any) ? item : Number(item)) 
+  return path.map(item => isNaN(item as any) ? item : Number(item)) as never[]
 }
 
 
