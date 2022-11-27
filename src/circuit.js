@@ -146,7 +146,7 @@ export function DebugTile({state}) {
 }
 
 
-function drawNotGate(ctx) {
+function drawNotGate(ctx, powered = false) {
   fillCellBackground(ctx, settings.colors.background)
   ctx.fillStyle = settings.colors.idleWire
 
@@ -179,28 +179,31 @@ function drawNotGate(ctx) {
   ctx.arc(cellSize / 2, cellSize * 0.7, radius, 0, 2 * Math.PI);
   ctx.stroke()
 
-  
-
-
   //inner circle
-  ctx.fillStyle = settings.colors.background
+  if (powered) {
+    ctx.fillStyle = settings.colors.poweredWire
+  } else {
+    ctx.fillStyle = settings.colors.background
+  }
+
   ctx.beginPath()
   ctx.arc(cellSize / 2, cellSize * 0.7, radius * 0.8, 0, 2 * Math.PI)
   ctx.fill()
 
 }
 
-export function NotGateCircuit({ state: { rotation } }) {
+export function NotGateCircuit({ state: { rotation, powered } }) {
   const canvasRef = useRef(null)
   
-  const style = {
+  //console.log(rotation)
+  const style = { 
     ...cellSizeStyles(),
     transform: rotationToTransform(rotation ?? 0)
   }
 
   useEffect(() => {
     adjustTileCanvasSize(canvasRef)
-    drawNotGate(getCanvasCtx(canvasRef))
+    drawNotGate(getCanvasCtx(canvasRef), powered)
 
   }, [])
 
@@ -305,7 +308,8 @@ export function notGateEntry() {
   return {
     position: null,
     state: {
-      rotation: 0
+      rotation: 0,
+      powered: true
     }, 
     cellType: 'not'
   }
@@ -333,7 +337,7 @@ export function ShowByEntryCircuit({entry}) {
     return <Void/>
   } 
   if (entry.cellType == 'not') {
-    return <NotGateCircuit state={entry}></NotGateCircuit>
+    return <NotGateCircuit state={entry.state}></NotGateCircuit>
   }
   if (entry.cellType == 'debug') {
     return <DebugTile state={entry.state}/>
