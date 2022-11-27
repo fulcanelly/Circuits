@@ -145,6 +145,71 @@ export function DebugTile({state}) {
   return <p>{JSON.stringify(state)}</p>
 }
 
+
+function drawNotGate(ctx) {
+  fillCellBackground(ctx, settings.colors.background)
+  ctx.fillStyle = settings.colors.idleWire
+
+  ctx.fillRect(sizes[0], 0, sizes[1], settings.cellSize)
+
+  ctx.strokeStyle = settings.colors.idleWire
+  const cellSize = settings.cellSize
+
+
+  //outer triangle
+
+  ctx.beginPath()
+  ctx.fillStyle = settings.colors.idleWire
+
+  ctx.lineWidth = 7
+  let path = new Path2D()
+  path.moveTo(0.1 * cellSize, 0.1 * cellSize) //left corner <
+  path.lineTo(cellSize / 2, cellSize * 0.7)  //bottom center
+
+  path.lineTo((1 - 0.1) * cellSize, 0.1 * cellSize)  //right corner >
+  path.lineTo(0.1 * cellSize, 0.1 * cellSize) //left corner <
+
+  path.lineTo(cellSize / 2, cellSize * 0.7) //bottom center
+  ctx.fill(path)
+
+  //outer circle
+  ctx.beginPath();
+
+  const radius = 7
+  ctx.arc(cellSize / 2, cellSize * 0.7, radius, 0, 2 * Math.PI);
+  ctx.stroke()
+
+  
+
+
+  //inner circle
+  ctx.fillStyle = settings.colors.background
+  ctx.beginPath()
+  ctx.arc(cellSize / 2, cellSize * 0.7, radius * 0.8, 0, 2 * Math.PI)
+  ctx.fill()
+
+}
+
+export function NotGateCircuit({ state: { rotation } }) {
+  const canvasRef = useRef(null)
+  
+  const style = {
+    ...cellSizeStyles(),
+    transform: rotationToTransform(rotation ?? 0)
+  }
+
+  useEffect(() => {
+    adjustTileCanvasSize(canvasRef)
+    drawNotGate(getCanvasCtx(canvasRef))
+
+  }, [])
+
+  return <canvas 
+      ref={canvasRef}
+      style={style}>
+    </canvas>
+}
+
 export function WireCircuit({ state: { powered, wireType, rotation} }) {
   const canvasRef = useRef(null)
 
@@ -236,6 +301,16 @@ export function powerSourceEntry() {
   }
 }
 
+export function notGateEntry() {
+  return {
+    position: null,
+    state: {
+      rotation: 0
+    }, 
+    cellType: 'not'
+  }
+}
+
 export function debugEntry(i = 'NaN') {
   return {
     position: null, 
@@ -257,9 +332,13 @@ export function ShowByEntryCircuit({entry}) {
   if (entry.cellType == 'void') {
     return <Void/>
   } 
+  if (entry.cellType == 'not') {
+    return <NotGateCircuit state={entry}></NotGateCircuit>
+  }
   if (entry.cellType == 'debug') {
     return <DebugTile state={entry.state}/>
   }
+  
   return <></>
 }
 
