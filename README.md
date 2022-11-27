@@ -1,8 +1,8 @@
-# Cicuits 
+# Circuits 
 
-What is it ?
+## What is it ?
 
-It's a logic gates builder inspired by [Current Circuit Builder]
+It's a logic gates builder inspired by [Current Circuit Builder](https://m.apkpure.com/current-circuit-builder/tobbe.android.current)
 
 
 # TODO 
@@ -14,4 +14,5 @@ It's a logic gates builder inspired by [Current Circuit Builder]
 * Ad chips
 
 ## Bugfixes :
-* related to [getNearWithTouchingIndex2](./src/engine.ts) problem 
+* fix related to [getNearWithTouchingIndex2](./src/engine.ts) problem 
+* fix wrong coordinates on rescale in chrome  
