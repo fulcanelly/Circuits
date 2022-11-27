@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { settings } from './settings';
 import * as R from 'ramda'
+import CSS from 'csstype';
 
 //===========================
 // Circuit components
@@ -10,8 +11,8 @@ import * as R from 'ramda'
 // Common canvas tile utils 
 //==============================
 
-function fillCellBackground(ctx, color) {
-  ctx.fillStyle = color ?? settings.colors.background
+function fillCellBackground(ctx, color = settings.colors.background) {
+  ctx.fillStyle = color
   ctx.fillRect(0, 0, settings.cellSize, settings.cellSize)
 }
 
@@ -250,7 +251,7 @@ export function ButtonCircuit({ rotation, pressed }) {
 
 // helper component used to place circuit in right spot 
 export function Positioned({pos, children}) {
-  const style = {
+  const style: CSS.Properties = {
     position: 'absolute',
     top: `${pos.y * settings.cellSize}px`,
     left: `${pos.x * settings.cellSize}px`
@@ -261,7 +262,7 @@ export function Positioned({pos, children}) {
 
 // just temporary circuit NOP component
 export function PlaceholderCircuit() {
-  const style = {
+  const style: CSS.Properties = {
     width: '50px',
     height: '50px',
     backgroundColor: 'blue',
