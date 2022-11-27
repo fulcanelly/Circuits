@@ -6,6 +6,7 @@ import * as R from 'ramda'
 //  * @param {*} handler 
 //  * @returns 
 //  */
+type ProxyType = {[key: string]: ProxyType }
 
 /**
 
@@ -18,21 +19,23 @@ import * as R from 'ramda'
  *  R.lensPath(buildPath(_ => _.a.b.c))
  *  
  * @param {(proxy: Proxy) => Proxy} handler 
- * @returns {[string | number]}
+ * 
  */
-export function buildPath(handler) {
-  let path = []
+export function buildPath(handler: (proxy: ProxyType) => ProxyType): (String | Number)[] {
+  let path: Array<String> = []
   let proxy = new Proxy(path, {
-    get(target, string, recv) {
+    get(target, string: string, recv) {
       target.push(string)
       return proxy
     }
   })
   handler(proxy)
-  return path.map(item => isNaN(item) ? item : Number(item)) 
+  return path.map(item => isNaN(item as any) ? item : Number(item)) 
 }
 
-export function isMatch(pattern, object) {
+
+
+export function isMatch(pattern: any, object: any): boolean {
   if (!object) {
     return false
   }
