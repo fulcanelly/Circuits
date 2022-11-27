@@ -5,10 +5,10 @@ import { floorMod, getNearWithTouchingIndex } from "./engine"
 
 
 
-type Position = { x: number, y: number }
+export type Position = { x: number, y: number }
 
 
-type CellBase = {
+export type CellBase = {
     position: Position
     state: {
         rotation: number
@@ -17,9 +17,9 @@ type CellBase = {
 }
 
 
-type WireType =  0 | 1 | 2 | 3
+export type WireType =  0 | 1 | 2 | 3
 
-type WireCells = {
+export type WireCells = {
         cellType: 'wire'
         state: {
             wireType: WireType
@@ -27,20 +27,21 @@ type WireCells = {
         }
     }
 
-type PowerCell = {
+export type PowerCell = {
         cellType: 'power'
     }
 
-type Cell = (PowerCell | WireCells) & CellBase
+
+export type Cell = (PowerCell | WireCells) & CellBase
 
 
-type Input = {
+export type Input = {
         pinIndex: PinIndex,
         position: Position
     }
 
 
-type Wire = {
+export type Wire = {
         cells: PinCell[]
         inputs: Input[] 
         powered: boolean
@@ -50,16 +51,16 @@ type Wire = {
 
 //TODO Composed
 
-type PinInfo = {
+export type PinInfo = {
         type: 'output' | 'input' | 'none' | 'bidirect' 
-        value: boolean | null 
+        value?: boolean | null 
     }
 
-type PinCell = {
+export type PinCell = {
         position: Position
         actual: Cell
         rotation: number 
-        pins: [PinInfo, PinInfo, PinInfo, PinInfo]
+        pins: PinInfo[]
     }
 
 
