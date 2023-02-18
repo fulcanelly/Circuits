@@ -195,8 +195,33 @@ describe("model", () => {
      *  x O >   x x x   => x O >   X X X
      *                  =>
      */
-    test.todo("NOT should power wire")
+    it("NOT should power wire", () => {
+        let first: Cell = {
+            cellType: 'not',
+            position: { x: 0, y: 0 },
+            state: {
+                rotation: 3, //WHY?
+                powered: true
+            }
+        }
 
+        let second: Cell = {
+            cellType: 'wire',
+            position: { x: 1, y: 0 },
+            state: {
+                rotation: 1,
+                wireType: 0,
+                powered: false
+            }
+        }
+
+        let cells = updateCells(
+            helpers.cells2PinCells([first, second]))
+
+        let updatedWire = cells.find(cell => cell.cellType == 'wire') as WireCell
+
+        expect(updatedWire.state.powered).toBe(true)
+    })
 
     /**
      *                  =>
