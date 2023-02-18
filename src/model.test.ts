@@ -1,5 +1,5 @@
 import { datasheets, visualToPins } from "./engine"
-import { Cell, findWires, PinCell } from "./model"
+import { Cell, findWires, PinCell, updateCells, WireCell } from "./model"
 import * as R from 'ramda'
 import { buildPath, isMatch } from './utils'
 
@@ -171,19 +171,22 @@ describe("model", () => {
      *          o o o   =>           o o o
      */
     it("power source should power a wire", () => {
-        let first: PinCell = visualToPins(
-            R.mergeDeepLeft({
-                    position: { x: 0, y: 0 },
-                    state: { rotation: 1 }
-                }, genericWire))
+        let first: Cell = R.mergeDeepLeft({
+                position: { x: 0, y: 0 },
+                state: { rotation: 1 }
+            }, genericWire)
 
-        let second: PinCell = visualToPins(
-            R.mergeDeepLeft({
-                    position: { x: 1, y: 0 },
-                    state: { rotation: 1 },
-                    cellType: 'power'
-                }, genericWire))
+        let second: Cell = R.mergeDeepLeft({
+                position: { x: 1, y: 0 },
+                cellType: 'power'
+            }, genericWire)
 
+        let cells = updateCells(
+            helpers.cells2PinCells([first, second]))
+
+        let updatedWire = cells.find(cell => cell.cellType == 'wire') as WireCell
+
+        expect(updatedWire.state.powered).toBe(true)
     })
 
 
