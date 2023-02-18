@@ -44,15 +44,18 @@ export type WireCell = {
             wireType: WireType
             powered: boolean
         }
-    }
+    }  & CellBase
 
 export type PowerCell = {
         cellType: 'power'
-    }
+    } & CellBase
 
 export type NotCell = {
-        cellType: 'not'
-    }
+        cellType: 'not',
+        state: {
+            powered: boolean
+        }
+    } & CellBase
 
 export type Cell = (PowerCell | WireCell | NotCell) & CellBase
 

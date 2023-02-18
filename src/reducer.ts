@@ -3,10 +3,24 @@
 //===========================
 import * as R from 'ramda'
 import { updateState } from './engine'
-import { State } from './model'
+import { Cell, NotCell, State, WireCell } from './model'
 import { buildPath } from './utils'
 
+export const genericWire: Cell = {
+  cellType: 'wire',
+  position: { x: 0, y: 0 },
+  state: {
+      rotation: 0,
+      wireType: 0,
+      powered: false
+  }
+}
+
 let id = 0
+
+function startingCells(): Cell[] {
+  return []
+}
 
 
 //init state
@@ -21,7 +35,7 @@ export function initState(): State {
       shift: { x: 0, y: 0 }
     },
 
-    cells: [],
+    cells: startingCells(),
 
     selected: {
       index: null,

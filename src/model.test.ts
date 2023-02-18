@@ -2,22 +2,13 @@ import { datasheets, visualToPins } from "./engine"
 import { Cell, findWires, PinCell, updateCells, WireCell } from "./model"
 import * as R from 'ramda'
 import { buildPath, isMatch } from './utils'
+import { genericWire } from "./reducer"
 
 //todo
 // * do not actually rotate
 // * do not use cell pins? why this indirection needed ?
 // * use index instead of .find
 // * fix engine .toPins() function
-
-export const genericWire: Cell = {
-    cellType: 'wire',
-    position: { x: 0, y: 0 },
-    state: {
-        rotation: 0,
-        wireType: 0,
-        powered: false
-    }
-}
 
 type ProxyType = {[key: string]: ProxyType }
 
@@ -188,7 +179,6 @@ describe("model", () => {
 
         expect(updatedWire.state.powered).toBe(true)
     })
-
 
     /**
      *                  =>
