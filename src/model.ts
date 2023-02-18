@@ -18,10 +18,10 @@ export type State = {
         cells: Cell[],
         field: Field,
         selected: {
-            index: number,
-            entry: Cell
+            index: number | null,
+            entry: Cell | null
         }
-        hovered?: Position
+        hovered: Position | null
     }
 
 export type Position = { x: number, y: number }

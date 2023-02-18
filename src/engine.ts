@@ -1,7 +1,7 @@
 import * as R from 'ramda'
 //import { buildModelOfState } from './nothing';
 import { debugEntry } from './circuit'
-import { Cell, findByPosition, getConnectedTo, getOppositeIndex, PinCell, PinIndex, PinInfo, Position, updateCells, WireCells } from './model';
+import { Cell, findByPosition, getConnectedTo, getOppositeIndex, PinCell, PinIndex, PinInfo, Position, State, updateCells, WireCells } from './model';
 import { buildPath, isMatch } from './utils'
 
 
@@ -434,7 +434,7 @@ const updater = (pinsCells, cell) => {
   throw 'idk'
 }
 
-export function updateState(state: { cells: [Cell]; }): { cells: [Cell] } & any {
+export function updateState(state: State): State {
   const pinsCells = state.cells.map(visualToPins)
   return R.set(cellsLens, updateCells(pinsCells), state)
   // return R.set(

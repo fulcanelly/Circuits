@@ -3,19 +3,20 @@ import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, s
 import { settings } from './settings';
 import { Switch } from '@mui/material';
 import { notGateEntry, powerSourceEntry, ShowByEntryCircuit, voidEntry, wireEntry } from './circuit';
+import { Position } from './model';
 
 //===========================
 // Interface
 //===========================
 
-//it's a main component which used to setup wheel / mouse move listeners 
+//it's a main component which used to setup wheel / mouse move listeners
 export function Field({ dispatch, children }) {
   const [holden, setHolden] = useState(false)
-  
+
   const onMouseDown = (mouseDownEvent) => {
     setHolden(true)
   }
-  
+
   const onLoseMouse = () => {
     setHolden(false)
   }
@@ -25,26 +26,26 @@ export function Field({ dispatch, children }) {
 
     sendShiftChange(dispatch, {
       x: mouseMoveEvent.movementX,
-      y: mouseMoveEvent.movementY 
+      y: mouseMoveEvent.movementY
     })
   }
 
   const onMouseWheel = ({deltaY}) => sendScaleChange(dispatch, deltaY)
 
-  const fieldStyle = { 
+  const fieldStyle = {
     backgroundColor: '#b3b6b7',
     width: '100vw',
     height: '100vh'
   }
 
   return <div
-    onMouseDown={onMouseDown} 
+    onMouseDown={onMouseDown}
     onWheel={onMouseWheel}
     onMouseMove={onMouseMove}
-    
+
     onMouseLeave={onLoseMouse}
     onMouseUp={onLoseMouse}
-  
+
   style={fieldStyle}>{children}</div>
 }
 
@@ -66,7 +67,7 @@ export function MovableField({ state, children }) {
 
     backgroundColor: '#e1df9b'
   }
-  return <div style={style}> 
+  return <div style={style as any}>
     {children}
   </div>
 }
@@ -81,7 +82,7 @@ export function resizeCanvas(canvas) {
 //main component where all circuits should be located in
 export function Grid({ dispatch, children }) {
   const canvasRef = useRef(null)
-  const [selected, setSelected] = useState()
+  const [selected, setSelected] = useState<Position | null>()
 
   const style = {
     width: `${settings.cellSize * settings.gridSize}px`,
@@ -93,24 +94,24 @@ export function Grid({ dispatch, children }) {
     const canvas = canvasRef.current
     resizeCanvas(canvas)
   }, [])
-  
+
   const drawMouseHover = ({x, y}) => {
 
     sendTileHover(dispatch, selected)
-    const canvas = canvasRef.current
+    const canvas = canvasRef.current as any
     const ctx = canvas.getContext('2d')
-   
+
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     ctx.fillStyle = 'rgba(74, 132, 151, 0.5)'
 
     const [x_, y_] = [x / 50, y / 50].map(Math.floor)
 
     ctx.fillRect(
-      x_ * settings.cellSize, y_ * settings.cellSize, 
+      x_ * settings.cellSize, y_ * settings.cellSize,
       settings.cellSize, settings.cellSize)
 
   }
-  
+
   const handleMouseClick = (event) => {
     if (selected) {
       sendTileClickEvent(dispatch, selected)
@@ -127,7 +128,7 @@ export function Grid({ dispatch, children }) {
       y: event.nativeEvent.layerY
     }
     drawMouseHover(pos)
-    
+
     //
     const native = event.nativeEvent
     const [x, y] = [
@@ -142,15 +143,15 @@ export function Grid({ dispatch, children }) {
       onMouseLeave={handleMouseLeave}
       onClick={handleMouseClick}>
         {children}
-        <canvas 
-          style={style}
+        <canvas
+          style={style as any}
           ref={canvasRef}
         ></canvas>
-    </div> 
+    </div>
 }
 
 
-///component containing control data 
+///component containing control data
 export function Toolbar({dispatch, state}) {
   const style = {
     height: '100px',
@@ -161,13 +162,13 @@ export function Toolbar({dispatch, state}) {
     sendToggleEditing(dispatch)
   }
 
-  return <div style={style}> 
+  return <div style={style}>
     <Switch
-      checked={state.mode.editing}
-      onChange={toggleEditing} 
-      variant="outlined"
-    > </Switch>
-    <ToolSelector 
+      checked={state.mode.editing as any}
+      onChange={toggleEditing as any}
+      //variant="outlined"
+    />
+    <ToolSelector
       dispatch={dispatch}
       state={state}
     ></ToolSelector>
@@ -181,7 +182,7 @@ function SelectableItem({selected, onSelect, children}) {
     border: selected ? '3px solid' : '',
     maxHeight: `${settings.cellSize * 1.1}px`
   }
-  
+
   return <div onClick={onSelect ?? (() => [])} style={style}>
     {children}
   </div>
@@ -193,7 +194,7 @@ export function ToolSelector({dispatch, state}) {
     display: 'flex',
     flexShrink: '2',
   }
-  
+
   const entryList = [
     voidEntry(),
     wireEntry(0),
@@ -205,16 +206,16 @@ export function ToolSelector({dispatch, state}) {
   ]
 
   const isSelected = i => (state.selected.index == i)
-  
+
   return <div style={style}>
       {entryList.map(
-        (entry, i) => <SelectableItem 
-          key={i} 
+        (entry, i) => <SelectableItem
+          key={i}
           onSelect={sendSelectTool.bind({}, dispatch, entryList[i], i)}
           selected={isSelected(i)}
           >
             <ShowByEntryCircuit entry={entry}/>
-          </SelectableItem>)}    
+          </SelectableItem>)}
     </div>
- 
+
 }
