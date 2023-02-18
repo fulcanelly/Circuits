@@ -38,7 +38,7 @@ export type CellBase = {
 
 export type WireType =  0 | 1 | 2 | 3
 
-export type WireCells = {
+export type WireCell = {
         cellType: 'wire'
         state: {
             wireType: WireType
@@ -54,7 +54,7 @@ export type NotCell = {
         cellType: 'not'
     }
 
-export type Cell = (PowerCell | WireCells | NotCell) & CellBase
+export type Cell = (PowerCell | WireCell | NotCell) & CellBase
 
 
 export type Input = {

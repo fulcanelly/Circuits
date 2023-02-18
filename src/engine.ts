@@ -1,7 +1,7 @@
 import * as R from 'ramda'
 //import { buildModelOfState } from './nothing';
 import { debugEntry } from './circuit'
-import { Cell, findByPosition, getConnectedTo, getOppositeIndex, PinCell, PinIndex, PinInfo, Position, State, updateCells, WireCells } from './model';
+import { Cell, findByPosition, getConnectedTo, getOppositeIndex, PinCell, PinIndex, PinInfo, Position, State, updateCells, WireCell } from './model';
 import { buildPath, isMatch } from './utils'
 
 
