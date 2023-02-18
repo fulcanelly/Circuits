@@ -50,8 +50,11 @@ export type PowerCell = {
         cellType: 'power'
     }
 
+export type NotCell = {
+        cellType: 'not'
+    }
 
-export type Cell = (PowerCell | WireCells) & CellBase
+export type Cell = (PowerCell | WireCells | NotCell) & CellBase
 
 
 export type Input = {
