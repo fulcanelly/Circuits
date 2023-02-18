@@ -25,7 +25,15 @@ function builtLens(handler: (proxy: ProxyType) => ProxyType) {
     return R.lensPath(buildPath(handler))
 }
 
-describe("model ", () => {
+const helpers = {
+
+    cells2PinCells(cells: Cell[]): PinCell[] {
+        return cells.map(visualToPins)
+    }
+
+}
+
+describe("model", () => {
     it("should convert pins to cell pin", () => {
         let wire: Cell = {
             cellType: 'wire',
@@ -75,37 +83,33 @@ describe("model ", () => {
      *  x
      */
     it("should construct one wire from two staright wires cells", () => {
-        let first: PinCell = visualToPins(
-            R.set(
-                builtLens(_ => _.position),
-                { x: 0, y: 0 },
-                genericWire))
+        let first: Cell = R.set(
+            builtLens(_ => _.position),
+            { x: 0, y: 0 },
+            genericWire)
 
-        let second: PinCell = visualToPins(
-            R.set(
-                builtLens(_ => _.position),
-                { x: 0, y: 1 },
-                genericWire))
+        let second: Cell = R.set(
+            builtLens(_ => _.position),
+            { x: 0, y: 1 },
+            genericWire)
 
-        let [wires, _] = findWires([first, second])
+        let [wires, _] = findWires(helpers.cells2PinCells([first, second]))
 
         expect(wires[0].cells.length).toBe(2)
     })
 
     it("should construct two wires ", () => {
-        let first: PinCell = visualToPins(
-            R.set(
-                builtLens(_ => _.position),
-                { x: 0, y: 0 },
-                genericWire))
+        let first: Cell = R.set(
+            builtLens(_ => _.position),
+            { x: 0, y: 0 },
+            genericWire)
 
-        let second: PinCell = visualToPins(
-            R.set(
-                builtLens(_ => _.position),
-                { x: 0, y: 2 },
-                genericWire))
+        let second: Cell = R.set(
+            builtLens(_ => _.position),
+            { x: 0, y: 2 },
+            genericWire)
 
-        let [wires, _] = findWires([first, second])
+        let [wires, _] = findWires(helpers.cells2PinCells([first, second]))
 
         expect(wires.length).toBe(2)
     })
@@ -116,19 +120,17 @@ describe("model ", () => {
      *
      */
     it("should construct wire from two rotated wire cells", () => {
-        let first: PinCell = visualToPins(
-            R.mergeDeepLeft({
-                    position: { x: 0, y: 0 },
-                    state: { rotation: 1 }
-                }, genericWire))
+        let first: Cell = R.mergeDeepLeft({
+                position: { x: 0, y: 0 },
+                state: { rotation: 1 }
+            }, genericWire)
 
-        let second: PinCell = visualToPins(
-            R.mergeDeepLeft({
-                    position: { x: 1, y: 0 },
-                    state: { rotation: 1 }
-                }, genericWire))
+        let second: Cell = R.mergeDeepLeft({
+                position: { x: 1, y: 0 },
+                state: { rotation: 1 }
+            }, genericWire)
 
-        let [wires, _] = findWires([first, second])
+        let [wires, _] = findWires(helpers.cells2PinCells([first, second]))
 
         expect(wires.length).toBe(1)
         expect(wires[0].cells.length).toBe(2)
@@ -141,25 +143,23 @@ describe("model ", () => {
      */
     //todo visualize
     it("should construct wire from two bend wire cells", () => {
-        let first: PinCell = visualToPins(
-            R.mergeDeepLeft({
-                    position: { x: 0, y: 0 },
-                    state: {
-                        rotation: 1,
-                        wireType: 1
-                    }
-                }, genericWire))
+        let first: Cell = R.mergeDeepLeft({
+                position: { x: 0, y: 0 },
+                state: {
+                    rotation: 1,
+                    wireType: 1
+                }
+            }, genericWire)
 
-        let second: PinCell = visualToPins(
-            R.mergeDeepLeft({
-                    position: { x: 1, y: 0 },
-                    state: {
-                        rotation: 3,
-                        wireType: 1
-                    }
-                }, genericWire))
+        let second: Cell = R.mergeDeepLeft({
+                position: { x: 1, y: 0 },
+                state: {
+                    rotation: 3,
+                    wireType: 1
+                }
+            }, genericWire)
 
-        let [wires, _] = findWires([first, second])
+        let [wires, _] = findWires(helpers.cells2PinCells([first, second]))
 
         expect(wires.length).toBe(1)
         expect(wires[0].cells.length).toBe(2)
@@ -170,7 +170,21 @@ describe("model ", () => {
      *  x x x   o   o   =>   X X X   o   o
      *          o o o   =>           o o o
      */
-    test.todo("power source  should power a wire")
+    it("power source should power a wire", () => {
+        let first: PinCell = visualToPins(
+            R.mergeDeepLeft({
+                    position: { x: 0, y: 0 },
+                    state: { rotation: 1 }
+                }, genericWire))
+
+        let second: PinCell = visualToPins(
+            R.mergeDeepLeft({
+                    position: { x: 1, y: 0 },
+                    state: { rotation: 1 },
+                    cellType: 'power'
+                }, genericWire))
+
+    })
 
 
     /**
@@ -179,4 +193,12 @@ describe("model ", () => {
      *                  =>
      */
     test.todo("NOT should power wire")
+
+
+    /**
+     *                  =>
+     *  x O >   x O >   => x O >   X o >
+     *                  =>
+     */
+    test.todo("NOT should power another NOT")
 })
