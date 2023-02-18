@@ -1,5 +1,5 @@
 import { datasheets, visualToPins } from "./engine"
-import { Cell, findWires, PinCell, updateCells, WireCell } from "./model"
+import { Cell, findWires, NotCell, PinCell, updateCells, WireCell } from "./model"
 import * as R from 'ramda'
 import { buildPath, isMatch } from './utils'
 import { genericWire } from "./reducer"
@@ -218,5 +218,32 @@ describe("model", () => {
      *  x O >   x O >   => x O >   X o >
      *                  =>
      */
-    test.todo("NOT should power another NOT")
+    it("NOT should power another NOT", () => {
+        let first: any = {
+            id: 1,
+            cellType: 'not',
+            position: { x: 0, y: 0 },
+            state: {
+                rotation: 3,
+                powered: true
+            }
+        }
+        let second: any = {
+            id: 2,
+            cellType: 'not',
+            position: { x: 1, y: 0 },
+            state: {
+                rotation: 3,
+                powered: true
+            }
+        }
+
+        let cells = updateCells(
+            helpers.cells2PinCells([first, second]))
+
+        let updatedNot = cells.find(cell => (cell as any).id == 2) as NotCell
+
+        expect(updatedNot.state.powered).toBe(false)
+
+    })
 })
