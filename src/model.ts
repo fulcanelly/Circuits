@@ -3,6 +3,26 @@ import { initState } from "./reducer"
 import * as R from 'ramda'
 import { Datasheet, floorMod, getNearWithTouchingIndex } from "./engine"
 
+export type Mode = {
+        editing: boolean
+    }
+
+
+export type Field = {
+        scale: number,
+        shift: Position
+    }
+
+export type State = {
+        mode: Mode
+        cells: Cell[],
+        field: Field,
+        selected: {
+            index: number,
+            entry: Cell
+        }
+        hovered?: Position
+    }
 
 export type Position = { x: number, y: number }
 
@@ -42,7 +62,7 @@ export type Input = {
 
 export type Wire = {
         cells: PinCell[]
-        inputs: Input[] 
+        inputs: Input[]
         powered: boolean
     }
 
@@ -51,14 +71,14 @@ export type Wire = {
 //TODO Composed
 
 export type PinInfo = {
-        type: 'output' | 'input' | 'none' | 'bidirect' 
-        value?: boolean | null 
+        type: 'output' | 'input' | 'none' | 'bidirect'
+        value?: boolean | null
     }
 
 export type PinCell = {
         position: Position
         actual: Cell
-        rotation: number 
+        rotation: number
         pins: PinInfo[]
         data: Datasheet
     }
@@ -90,18 +110,18 @@ export function getConnectedTo(pool: PinCell[], center: PinCell): ConnectionType
                 ...near
             }
         })
-        .filter(near => {   
+        .filter(near => {
             const found = near.found //pool.find(cell => R.equals(cell.position, near.position))
-            
+
             if (!found) {
-                return false 
+                return false
             }
 
             return R.all(
-                pin => ['bidirect', 'output', 'input'].includes((pin.type)), 
+                pin => ['bidirect', 'output', 'input'].includes((pin.type)),
                 [found.pins[near.touching], center.pins[getOppositeIndex(near.touching)]])
-      
-        }) 
+
+        })
 
 }
 
@@ -122,7 +142,7 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
         powered: false,
     }
 
-    while (queue.length) {  
+    while (queue.length) {
         getConnectedTo(rest, queue.shift()!)
             .forEach(cell => {
 
@@ -133,11 +153,11 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
                 } else {
                     wire.inputs.push({
                         pinIndex: getOppositeIndex(cell.touching) as PinIndex,
-                        position: cell.position 
+                        position: cell.position
                     })
                 }
 
-            }) 
+            })
     }
 
     return [wire, R.without(wire.cells, pinCells)]
@@ -147,9 +167,9 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
 
 export function findWires(tiles: PinCell[]): [Wire[], PinCell[]]{
     let wires: Wire[] = []
-    while (tiles.find(p => p.actual.cellType == 'wire')) {   
+    while (tiles.find(p => p.actual.cellType == 'wire')) {
         let [wire, tilesUpd] = getWire(tiles)
-        tiles = tilesUpd 
+        tiles = tilesUpd
         if (wire) {
             wires.push(wire)
         }
@@ -184,7 +204,7 @@ export function updateCells(cells: PinCell[]): Cell[] {
 
         const wireTiles = wire.cells.map(cell => {
             return R.set(actualStatePoweredLens, powered, cell)
-        }) 
+        })
 
         result.push(...wireTiles)
     }
@@ -193,11 +213,11 @@ export function updateCells(cells: PinCell[]): Cell[] {
 
     const resultCopy = [...result]
     for (const i in resultCopy) {
-        
+
         const gate = resultCopy[i]
-        
+
         if (gate.data.update) {
-            result[i] = gate.data.update?.(resultCopy, gate) 
+            result[i] = gate.data.update?.(resultCopy, gate)
         }
 
     }

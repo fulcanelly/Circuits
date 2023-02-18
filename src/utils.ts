@@ -8,6 +8,7 @@ import * as R from 'ramda'
 //  */
 type ProxyType = {[key: string]: ProxyType }
 
+
 /**
 
  *  Helper function for ramda lenses
@@ -21,8 +22,8 @@ type ProxyType = {[key: string]: ProxyType }
  * @param {(proxy: Proxy) => Proxy} handler
  *
  */
-export function buildPath(handler: (proxy: ProxyType) => ProxyType): never[] {
-  let path: Array<String> = []
+export function buildPath(handler: (proxy: ProxyType) => ProxyType): (string | number)[] {
+  let path: Array<string | number> = []
   let proxy = new Proxy(path, {
     get(target, string: string, recv) {
       target.push(string)
@@ -30,7 +31,7 @@ export function buildPath(handler: (proxy: ProxyType) => ProxyType): never[] {
     }
   })
   handler(proxy)
-  return path.map(item => isNaN(item as any) ? item : Number(item)) as never[]
+  return path.map(item => isNaN(item as any) ? item : Number(item))
 }
 
 
