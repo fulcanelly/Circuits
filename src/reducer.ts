@@ -19,25 +19,8 @@ export const genericWire: Cell = {
 let id = 0
 
 function startingCells(): Cell[] {
-  let first: any = {
-        id: 1,
-        cellType: 'not',
-        position: { x: 0, y: 0 },
-        state: {
-            rotation: 1,
-            powered: true
-        }
-    }
-    let second: any = {
-        id: 2,
-        cellType: 'not',
-        position: { x: 1, y: 0 },
-        state: {
-            rotation: 1,      //not
-            powered: true
-        }
-    }
-  return [first, second]
+
+  return []
 }
 
 

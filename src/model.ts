@@ -160,7 +160,7 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
                     rest = R.without(wire.cells, pinCells)
                 } else {
                     wire.inputs.push({
-                        pinIndex: getOppositeIndex(cell.touching) as PinIndex,
+                        pinIndex: (cell.touching) as PinIndex,
                         position: cell.position
                     })
                 }

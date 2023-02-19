@@ -159,11 +159,30 @@ describe("model", () => {
         expect(wires[0].cells.length).toBe(2)
     })
 
+
     /**
      *          o o o   =>           o o o
      *  x x x   o   o   =>   X X X   o   o
      *          o o o   =>           o o o
      */
+    it("should construct wire with input pin index = 1", () => {
+        let first: Cell = R.mergeDeepLeft({
+            position: { x: 0, y: 0 },
+            state: { rotation: 1 }
+        }, genericWire)
+
+        let second: Cell = R.mergeDeepLeft({
+                position: { x: 1, y: 0 },
+                cellType: 'power'
+            }, genericWire)
+
+        let [wires, _] = findWires(helpers.cells2PinCells([first, second]))
+
+        console.log(wires[0].inputs)
+        expect(wires[0].inputs[0].pinIndex).toBe(0)
+    })
+
+
     it("power source should power a wire", () => {
         let first: Cell = R.mergeDeepLeft({
                 position: { x: 0, y: 0 },
@@ -174,6 +193,7 @@ describe("model", () => {
                 position: { x: 1, y: 0 },
                 cellType: 'power'
             }, genericWire)
+
 
         let cells = updateCells(
             helpers.cells2PinCells([first, second]))
@@ -369,9 +389,10 @@ describe("not datasheet", () => {
         const pins = subject.toPins(cell).pins
 
         expect(pins[0].value != true).toBe(true)
-        expect(pins[1].value != true).toBe(true)
+        expect(pins[1].value).toBe(true)
         expect(pins[2].value != true).toBe(true)
-        expect(pins[3].value).toBe(true)
+        expect(pins[3].value != true).toBe(true)
+
     })
 
 
@@ -405,10 +426,7 @@ describe("not datasheet", () => {
 
         const pins = subject.toPins(cell).pins
 
-        // expect(pins[0].value != true).toBe(true)
-        // expect(pins[1].value != true).toBe(true)
-        // expect(pins[2].value != true).toBe(true)
-        expect(pins[2].value).toBe(true)
+        expect(pins[0].value).toBe(true)
     })
 })
 
