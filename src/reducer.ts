@@ -19,7 +19,25 @@ export const genericWire: Cell = {
 let id = 0
 
 function startingCells(): Cell[] {
-  return []
+  let first: any = {
+        id: 1,
+        cellType: 'not',
+        position: { x: 0, y: 0 },
+        state: {
+            rotation: 1,
+            powered: true
+        }
+    }
+    let second: any = {
+        id: 2,
+        cellType: 'not',
+        position: { x: 1, y: 0 },
+        state: {
+            rotation: 1,      //not
+            powered: true
+        }
+    }
+  return [first, second]
 }
 
 
@@ -112,7 +130,7 @@ export function sendToggleEditing(dispatch) {
   })
 }
 
-export function handleToggleEditing(state, action) {
+export function handleToggleEditing(state: State, action) {
   const modeEditingLens = R.lensPath(
     buildPath(_ => _.mode.editing)
   )
@@ -121,7 +139,7 @@ export function handleToggleEditing(state, action) {
   return R.set(modeEditingLens, !lastEditingState, state)
 }
 
-export function handleTileClick(state, action) {
+export function handleTileClick(state: State, action) {
   if (!state.mode.editing) {
     return state
   }

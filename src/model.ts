@@ -28,13 +28,15 @@ export type Position = { x: number, y: number }
 
 
 export type CellBase = {
-    position: Position
+    position: Position// | null
     state: {
         rotation: number
     }
-    cellType: string
 }
 
+export type VoidCell ={
+        cellType: 'void'
+    } & CellBase
 
 export type WireType =  0 | 1 | 2 | 3
 
@@ -57,7 +59,7 @@ export type NotCell = {
         }
     } & CellBase
 
-export type Cell = (PowerCell | WireCell | NotCell) & CellBase
+export type Cell = PowerCell | WireCell | NotCell | VoidCell
 
 
 export type Input = {
@@ -170,8 +172,8 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
 
 }
 
-
-export function findWires(tiles: PinCell[]): [Wire[], PinCell[]]{
+export function findWires(tiles: PinCell[]): [Wire[], PinCell[]] {
+    //todo .filter wire
     let wires: Wire[] = []
     while (tiles.find(p => p.actual.cellType == 'wire')) {
         let [wire, tilesUpd] = getWire(tiles)
@@ -184,13 +186,12 @@ export function findWires(tiles: PinCell[]): [Wire[], PinCell[]]{
     return [wires, tiles]
 }
 
-
 export function getValueAt(cells: PinCell[], input: Input): boolean {
     const samePosition = cell => R.equals(cell.position, input.position)
     return cells.find(samePosition)?.pins[input.pinIndex].value!
 }
 
-function pinCellToCell(cells) {
+function pinCellToCell(cells: PinCell[]): Cell[] {
     return cells.map(it => it.actual)
 }
 
@@ -199,7 +200,6 @@ const actualStatePoweredLens = R.lensPath(["actual", "state", "powered"])
 export function updateCells(cells: PinCell[]): Cell[] {
     let [wires, rest] = findWires(cells)
     let result: PinCell[] = []
-
 
     for (let wire of wires) {
         const powered = wire.inputs.some(
@@ -225,11 +225,7 @@ export function updateCells(cells: PinCell[]): Cell[] {
         if (gate.data.update) {
             result[i] = gate.data.update?.(resultCopy, gate)
         }
-
     }
 
-
     return pinCellToCell(result)
-
-
 }

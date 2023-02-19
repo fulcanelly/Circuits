@@ -201,6 +201,7 @@ export function ToolSelector({dispatch, state}) {
     wireEntry(1),
     wireEntry(2),
     wireEntry(3),
+    wireEntry(4),
     notGateEntry(),
     powerSourceEntry(),
   ]

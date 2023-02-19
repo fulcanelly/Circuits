@@ -36,8 +36,6 @@ export function buildPath(handler: (proxy: ProxyType) => ProxyType): (string | n
 
 
 
-
-
 export function isMatch(pattern: any, object: any): boolean {
   if (!object) {
     return false

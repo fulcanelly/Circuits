@@ -2,13 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { settings } from './settings';
 import * as R from 'ramda'
 import CSS from 'csstype';
+import { NotCell, PowerCell } from './model';
 
 //===========================
 // Circuit components
 //===========================
 
 //==============================
-// Common canvas tile utils 
+// Common canvas tile utils
 //==============================
 
 function fillCellBackground(ctx, color = settings.colors.background) {
@@ -33,7 +34,7 @@ export function getCanvasCtx(ref) {
 }
 
 const sizes = [
-  0.4, 0.2, 0.4 
+  0.4, 0.2, 0.4
 ].map(R.multiply(settings.cellSize))
 
 
@@ -42,16 +43,16 @@ export function drawStraightWire(ctx, color) {
   ctx.fillStyle = color
 
   ctx.fillRect(sizes[0], 0, sizes[1], settings.cellSize)
-} 
+}
 
 export function drawCrossWire(ctx, color) {
   fillCellBackground(ctx)
   ctx.fillStyle = color
 
-  //wire along y axis 
+  //wire along y axis
   ctx.fillRect(sizes[0], 0, sizes[1], settings.cellSize)
 
-  //wire along x axis 
+  //wire along x axis
   ctx.fillRect(0, sizes[0], settings.cellSize, sizes[1])
 }
 
@@ -59,10 +60,10 @@ export function drawThreeWayWire(ctx, color) {
   fillCellBackground(ctx)
   ctx.fillStyle = color
 
-  //wire along y axis 
+  //wire along y axis
   ctx.fillRect(sizes[0], 0, sizes[1], settings.cellSize)
 
-  //wire along x axis 
+  //wire along x axis
   ctx.fillRect(0, sizes[0], settings.cellSize / 2, sizes[1])
 }
 
@@ -75,6 +76,13 @@ export function draw90DegBendWire(ctx, color) {
   ctx.fillRect(0, sizes[0], settings.cellSize * 0.6, sizes[1])
 }
 
+
+export function drawShuntWire(ctx, color) {
+  fillCellBackground(ctx)
+  ctx.fillStyle = color
+
+  ctx.fillRect(sizes[0], 0, sizes[1], settings.cellSize * 0.6)
+}
 
 export function drawPowerSource(ctx) {
   fillCellBackground(ctx, settings.colors.idleWire)
@@ -116,7 +124,7 @@ export function Void({}) {
     fillCellBackground(getCanvasCtx(canvasRef))
   },[])
 
-  return <canvas 
+  return <canvas
     ref={canvasRef}
     style={style}>
   </canvas>
@@ -135,7 +143,7 @@ export function PowerSource({}) {
     drawPowerSource(getCanvasCtx(canvasRef))
   },[])
 
-  return <canvas 
+  return <canvas
     ref={canvasRef}
     style={style}>
   </canvas>
@@ -195,9 +203,9 @@ function drawNotGate(ctx, powered = false) {
 
 export function NotGateCircuit({ state: { rotation, powered } }) {
   const canvasRef = useRef(null)
-  
+
   //console.log(rotation)
-  const style = { 
+  const style = {
     ...cellSizeStyles(),
     transform: rotationToTransform(rotation ?? 0)
   }
@@ -208,7 +216,7 @@ export function NotGateCircuit({ state: { rotation, powered } }) {
 
   }, [])
 
-  return <canvas 
+  return <canvas
       ref={canvasRef}
       style={style}>
     </canvas>
@@ -227,18 +235,20 @@ export function WireCircuit({ state: { powered, wireType, rotation} }) {
     draw90DegBendWire,
     drawThreeWayWire,
     drawCrossWire,
+    drawShuntWire,
+    drawShuntWire,
   ]
 
-  const color = powered ? 
-    settings.colors.poweredWire : 
+  const color = powered ?
+    settings.colors.poweredWire :
     settings.colors.idleWire
 
   useEffect(() => {
     adjustTileCanvasSize(canvasRef)
-    wireTypes[wireType ?? 0 % 4](getCanvasCtx(canvasRef), color)
+    wireTypes[wireType](getCanvasCtx(canvasRef), color)
   },[])
 
-  return <canvas 
+  return <canvas
     ref={canvasRef}
     style={style}>
   </canvas>
@@ -249,13 +259,13 @@ export function ButtonCircuit({ rotation, pressed }) {
   //TODO
 }
 
-// helper component used to place circuit in right spot 
+// helper component used to place circuit in right spot
 export function Positioned({pos, children}) {
   const style: CSS.Properties = {
     position: 'absolute',
     top: `${pos.y * settings.cellSize}px`,
     left: `${pos.x * settings.cellSize}px`
-  }  
+  }
   return <div style={style} >{children}</div>
 }
 
@@ -274,7 +284,7 @@ export function PlaceholderCircuit() {
 
 /// entries
 export function wireEntry(wireType) {
-  return {
+  const result =  {
     position: null,
     state: {
       rotation: 0,
@@ -283,21 +293,27 @@ export function wireEntry(wireType) {
     },
     cellType: 'wire',
   }
-} 
+
+  if (wireType == 5) {
+    result.state.powered = true
+  }
+
+  return result
+}
 
 export function voidEntry() {
   return {
-    position: null, 
+    position: null,
     state: {
-      rotation: null, 
+      rotation: null,
     },
     cellType: 'void'
   }
 }
 
-export function powerSourceEntry() {
+export function powerSourceEntry(): PowerCell {
   return {
-    position: null, 
+    position: null as any,
     state: {
       rotation: 0
     },
@@ -305,20 +321,20 @@ export function powerSourceEntry() {
   }
 }
 
-export function notGateEntry() {
+export function notGateEntry(): NotCell {
   return {
-    position: null,
+    position: null as any,
     state: {
       rotation: 0,
       powered: true
-    }, 
+    },
     cellType: 'not'
   }
 }
 
 export function debugEntry(i = 'NaN') {
   return {
-    position: null, 
+    position: null,
     state: {
       i
     },
@@ -333,17 +349,17 @@ export function ShowByEntryCircuit({entry}) {
   }
   if (entry.cellType == 'power') {
     return <PowerSource/>
-  } 
+  }
   if (entry.cellType == 'void') {
     return <Void/>
-  } 
+  }
   if (entry.cellType == 'not') {
     return <NotGateCircuit state={entry.state}></NotGateCircuit>
   }
   if (entry.cellType == 'debug') {
     return <DebugTile state={entry.state}/>
   }
-  
+
   return <></>
 }
 

@@ -1,7 +1,7 @@
 import * as R from 'ramda'
 //import { buildModelOfState } from './nothing';
-import { debugEntry } from './circuit'
-import { Cell, findByPosition, getConnectedTo, getOppositeIndex, PinCell, PinIndex, PinInfo, Position, State, updateCells, WireCell } from './model';
+import { debugEntry, drawShuntWire } from './circuit'
+import { Cell, findByPosition, getConnectedTo, getOppositeIndex, NotCell, PinCell, PinIndex, PinInfo, Position, State, updateCells, WireCell } from './model';
 import { buildPath, isMatch } from './utils'
 
 
@@ -78,12 +78,7 @@ function makeHandler({pattern, pinInfo, handler}) {
 // 2 - 0
 // 3 - 1
 
-/**
- *
- * @param {{x: number, y: number}} position
- * @returns {[{x: number, y: number}]}
- */
-export function getNeighbours({ x, y }) {
+export function getNeighbours({ x, y }): Position[] {
   return [
       [ -1,  0  ],
       [  0,  1  ],
@@ -142,6 +137,14 @@ const valueLens = R.lensPath(
     buildPath(_ => _.value))
 
 
+//toPins :: Cell -> State -> Pins
+
+//getCellState :: Cell -> Pins -> State
+
+
+//suspect:
+// 1) input is taken not from around cells but from itself
+// 2) input_pins == reverse(output_pins)
 
 export type Datasheet = {
     pattern: any,
@@ -149,6 +152,10 @@ export type Datasheet = {
     toPins: (cell: any) => PinCell,
     update?: (cells: PinCell[], self: PinCell) => PinCell
   }
+
+// ========================
+
+// ========================
 
 //what pin pinInfo means:
 //
@@ -158,7 +165,97 @@ export type Datasheet = {
 //
 //           pinInfo[1]
 
-//TODO: apply DRY
+// bug (?):
+
+//           pinInfo[1]
+//               __
+//  pinInfo[0]  /_ /  pinInfo[2]
+//
+//           pinInfo[3]
+
+// ========================
+
+// ========================
+
+export const actualStatePoweredLens = R.lensPath(
+    buildPath(_ => _.actual.state.powered))
+
+export const notDatasheet = {
+  pattern: {
+    cellType: 'not'
+  },
+
+  pinInfo: [
+    pinTypes.none(),
+    pinTypes.output(1),
+    pinTypes.none(),
+    pinTypes.input(1),
+  ],
+
+  // pinInfo: [
+  //   pinTypes.none(),
+  //   pinTypes.output(1),
+  //   pinTypes.none(),
+  //   pinTypes.input(1),
+  // ],
+
+  //may be powered -> pinCells works wrong(inverted)
+  toPins(cell: NotCell) {
+    const pins = this.pinInfo.map(it => {
+      if (it.type == 'output') {
+        return R.set(valueLens, Boolean(cell.state.powered), it)
+      } else {
+        return it
+      }
+    })
+    const rotation = Number(cell.state.rotation)
+
+    return {
+      data: this,
+      position: cell!.position,
+      actual: cell,
+      rotation,
+      pins: rotateTimes(pins, floorMod(rotation, 4))
+      // TODO why +2 is needed ?
+    }
+  },
+
+  update(all: PinCell[], self: PinCell): PinCell {
+    const attachedPinValues = getNeighbours(self.position)
+      .map(pos => findByPosition(all, pos))
+      .map((pcell, index) => pcell?.pins[getOppositeIndex(index)].value)
+
+    const [,out,,input] = rotateReverseTimes(attachedPinValues, floorMod(self.rotation, 4))
+   // return R.set(actualStatePoweredLens, true, self)
+
+    return R.set(actualStatePoweredLens, !input, self)
+  }
+
+  //???
+  // update(cells: PinCell[], self: PinCell): PinCell {
+  //   const actualStatePoweredLens = R.lensPath(
+  //     buildPath(_ => _.actual.state.powered))
+
+  //   const pinConnections = R.zip(
+  //     self.pins, getNearWithTouchingIndex(self.position))//2
+  //       .map(([it, against]) => ({ it, against, index: getOppositeIndex(against.touching) }))
+
+  //   const [,input,,out] = rotateReverseTimes(pinConnections, floorMod(self.rotation, 4))
+
+
+  //   const inputCell = findByPosition(cells, input.against.position)
+
+  //   if (inputCell) {
+  //     const value = inputCell.pins[input.index].value
+  //     return R.set(actualStatePoweredLens, !value, self)
+  //   }
+
+  //   return R.set(actualStatePoweredLens, true, self)
+  // }
+
+}
+
+
 export const datasheets: Datasheet[] = [
 
   {
@@ -211,7 +308,15 @@ export const datasheets: Datasheet[] = [
       pinTypes.bidirect(1),
     ],
 
-    toPins(cell) {
+    toPins(cell: WireCell) {
+      try {
+        throw new Error()
+      }
+      catch(e) {
+       // console.log(e)
+      }
+     // console.log("MEOW")
+
       const pins = this.pinInfo.map(it => {
         if (it.type == 'bidirect') {
           return R.set(valueLens, Boolean(cell.state.powered), it)
@@ -306,24 +411,28 @@ export const datasheets: Datasheet[] = [
 
   {
     pattern: {
-      cellType: 'not'
+      cellType: 'wire',
+      state: {
+        wireType: 4
+      }
     },
 
     pinInfo: [
       pinTypes.none(),
-      pinTypes.input(1),
       pinTypes.none(),
-      pinTypes.output(1),
+      pinTypes.none(),
+      pinTypes.bidirect()
     ],
 
     toPins(cell) {
       const pins = this.pinInfo.map(it => {
-        if (it.type == 'output') {
+        if (it.type == 'bidirect') {
           return R.set(valueLens, Boolean(cell.state.powered), it)
         } else {
           return it
         }
       })
+
       const rotation = Number(cell.state.rotation)
 
       return {
@@ -333,30 +442,47 @@ export const datasheets: Datasheet[] = [
         rotation,
         pins: rotateTimes(pins, floorMod(rotation, 4))
       }
+    }
+  },
+
+  //shunt
+  {
+    pattern: {
+      cellType: 'wire',
+      state: {
+        wireType: 5
+      }
     },
 
-    update(cells: PinCell[], self: PinCell): PinCell {
-      const actualStatePoweredLens = R.lensPath(
-        buildPath(_ => _.actual.state.powered))
+    pinInfo: [
+      pinTypes.none(),
+      pinTypes.none(),
+      pinTypes.none(),
+      pinTypes.bidirect()
+    ],
 
-      const idk = R.zip(
-        self.pins, getNearWithTouchingIndex2(self.position))
-          .map(([it, against]) => ({ it, against, index: getOppositeIndex(against.touching) }))
+    toPins(cell) {
+      const pins = this.pinInfo.map(it => {
+        if (it.type == 'bidirect') {
+          return R.set(valueLens, true, it)
+        } else {
+          return it
+        }
+      })
 
-      const [,input,,out] = rotateReverseTimes(idk, floorMod(self.rotation, 4))
+      const rotation = Number(cell.state.rotation)
 
-
-      const inputCell = findByPosition(cells, input.against.position)
-
-      if (inputCell) {
-        const value = inputCell.pins[input.index].value
-        return R.set(actualStatePoweredLens, !value, self)
+      return {
+        data: this,
+        position: cell.position,
+        actual: cell,
+        rotation,
+        pins: rotateTimes(pins, floorMod(rotation, 4))
       }
-
-      return R.set(actualStatePoweredLens, true, self)
     }
-
   },
+
+  notDatasheet,
 
   {
     pattern: {
@@ -440,27 +566,4 @@ export function updateState(state: State): State {
   // return R.set(
   //   cellsLens, pinsCells.map(R.curry(updater)(pinsCells)), state)
 }
-
-
-const positionLens = R.lensPath(
-  buildPath(_ => _.position)
-)
-
-// debug-purpose-only functions
-
-export function copyPositionedAt(entry, position) {
-  return R.set(positionLens, position, entry)
-}
-
-// export function genDebugCellsFor(pos) {
-//   return getNeighbours(pos)
-//     .map(position => copyPositionedAt(
-//         debugEntry(position), position))
-// }
-
-// export function genDebugCellFor(pos) {
-//   return getNeighbours(pos)
-//     .map(position => copyPositionedAt(
-//         debugEntry(position), position))[2]
-// }
 
