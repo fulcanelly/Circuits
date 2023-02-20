@@ -3,7 +3,7 @@
 //===========================
 import * as R from 'ramda'
 import { updateState } from './engine'
-import { Cell, NotCell, State, WireCell } from './model'
+import { Cell, NotCell, Position, State, WireCell } from './model'
 import { buildPath } from './utils'
 
 export const genericWire: Cell = {
@@ -21,6 +21,21 @@ let id = 0
 function startingCells(): Cell[] {
 
   return []
+}
+
+
+// TODO
+
+const events = {
+
+  toggle_editing: {
+    send(dispatch: React.Dispatch<Action>) {
+    },
+
+    handle() {
+
+    }
+  }
 }
 
 
@@ -48,8 +63,20 @@ export function initState(): State {
   }
 }
 
+//TODO
+type Action = {
+    type: string
+    [rest: string]: any
+  }
 
-export function sendSelectTool(dispatch, entry, index) {
+type SelectToolAction = {
+    type: 'select_tool',
+    entry: Cell,
+    index: number
+  }
+
+
+export function sendSelectTool(dispatch: React.Dispatch<Action>, entry: Cell, index: number) {
   dispatch({
     type: 'select_tool',
     entry, index
@@ -57,13 +84,51 @@ export function sendSelectTool(dispatch, entry, index) {
 }
 
 
-export function sendCellsUpdate(dispatch) {
+export function sendCellsUpdate(dispatch: React.Dispatch<Action>) {
   dispatch({
     type: 'cells_update'
   })
 }
 
-function handleSelectTool(state, action) {
+export function sendScaleChange(dispatch: React.Dispatch<Action>, deltaY: number) {
+  dispatch({
+    type: 'scale_change', deltaY
+  })
+}
+
+export function sendShiftChange(dispatch: React.Dispatch<Action>, diff: Position) {
+  dispatch({
+    type: 'shift_change', diff
+  })
+}
+
+export function sendTileHover(dispatch: React.Dispatch<Action>, pos: Position | undefined) {
+  dispatch({
+    type: 'tile_hover', pos
+  })
+}
+
+export function sendTileClickEvent(dispatch: React.Dispatch<Action>, pos: Position) {
+  dispatch({
+    type: 'tile_click',
+    pos: pos,
+    id: id++
+  })
+}
+
+export function sendToggleEditing(dispatch: React.Dispatch<Action>) {
+  dispatch({
+    type: 'edit',
+    id: id++
+  })
+}
+
+export function handleTileHover(state: State, action: Action) {
+  return R.set(
+    R.lensPath(['hovered']), action.pos, state)
+}
+
+function handleSelectTool(state, action: Action) {
   let selectedIndexLens = R.lensPath(
     buildPath(_ => _.selected.index))
 
@@ -75,45 +140,7 @@ function handleSelectTool(state, action) {
       selectedIndexLens, action.index, state))
 }
 
-export function sendScaleChange(dispatch, deltaY) {
-  dispatch({
-    type: 'scale_change', deltaY
-  })
-}
-
-export function sendShiftChange(dispatch, diff) {
-  dispatch({
-    type: 'shift_change', diff
-  })
-}
-
-export function sendTileHover(dispatch, pos) {
-  dispatch({
-    type: 'tile_hover', pos
-  })
-}
-
-export function handleTileHover(state, action) {
-  return R.set(
-    R.lensPath(['hovered']), action.pos, state)
-}
-
-export function sendTileClickEvent(dispatch, pos) {
-  dispatch({
-    type: 'tile_click',
-    pos: pos,
-    id: id++
-  })
-}
-
-export function sendToggleEditing(dispatch) {
-  dispatch({
-    type: 'edit',
-    id: id++
-  })
-}
-
-export function handleToggleEditing(state: State, action) {
+export function handleToggleEditing(state: State, action: Action) {
   const modeEditingLens = R.lensPath(
     buildPath(_ => _.mode.editing)
   )
@@ -122,7 +149,7 @@ export function handleToggleEditing(state: State, action) {
   return R.set(modeEditingLens, !lastEditingState, state)
 }
 
-export function handleTileClick(state: State, action) {
+export function handleTileClick(state: State, action: Action) {
   if (!state.mode.editing) {
     return state
   }
@@ -167,7 +194,7 @@ export function handleTileClick(state: State, action) {
 }
 
 
-function handleMouseWheelEditing(state, action) {
+function handleMouseWheelEditing(state: State, action: Action) {
   if (state.hovered) {
     //find needed cell
     const cell = state.cells.find(
@@ -176,7 +203,7 @@ function handleMouseWheelEditing(state, action) {
       )
 
     //get index of found cell
-    let index = state.cells.indexOf(cell)
+    let index = state.cells.indexOf(cell as any)
 
     if (index < 0) {
       return state
@@ -196,7 +223,7 @@ function handleMouseWheelEditing(state, action) {
   return state
 }
 
-export function handleMouseWheel(state, action) {
+export function handleMouseWheel(state: State, action: Action) {
 
   if (state.mode.editing) {
     return handleMouseWheelEditing(state, action)
@@ -223,7 +250,7 @@ export function handleMouseWheel(state, action) {
 
 }
 
-export function handleShiftChange(state, action) {
+export function handleShiftChange(state: State, action: Action) {
   if (state.mode.editing) return state
 
   const fieldStateLens = R.lensPath(
@@ -241,11 +268,11 @@ export function handleShiftChange(state, action) {
 }
 
 
-export function handleCellsUpdate(state: State, action): State {
+export function handleCellsUpdate(state: State, action: Action): State {
   return updateState(state)
 }
 
-export function defaultReducer(state: State, action) {
+export function defaultReducer(state: State, action: Action) {
   const template = {
     tile_click: handleTileClick,
     edit: handleToggleEditing,

@@ -4,7 +4,6 @@ import { defaultReducer, initState, sendCellsUpdate } from './reducer';
 import { Field, Grid, MovableField, Toolbar } from './gui';
 import { CircuitComposer } from './circuit';
 import ReactJson from 'react-json-view'
-import { findDatasheet, visualToPins } from './engine';
 
 
 //===========================
@@ -16,7 +15,7 @@ function App() {
 
   const [state, dispatch] = useReducer(defaultReducer, initState())
 
-  useEffect(() => {    
+  useEffect(() => {
     const interval = setInterval(() => sendCellsUpdate(dispatch), 200)
 
    return () => clearInterval(interval)

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { settings } from './settings';
 import * as R from 'ramda'
 import CSS from 'csstype';
-import { NotCell, PowerCell } from './model';
+import { Cell, NotCell, PowerCell, VoidCell, WireCell } from './model';
 
 //===========================
 // Circuit components
@@ -283,9 +283,9 @@ export function PlaceholderCircuit() {
 }
 
 /// entries
-export function wireEntry(wireType) {
-  const result =  {
-    position: null,
+export function wireEntry(wireType): WireCell {
+  const result: WireCell = {
+    position: null as any,
     state: {
       rotation: 0,
       powered: false,
@@ -301,11 +301,11 @@ export function wireEntry(wireType) {
   return result
 }
 
-export function voidEntry() {
+export function voidEntry(): VoidCell {
   return {
-    position: null,
+    position: null as any,
     state: {
-      rotation: null,
+      rotation: null as any,
     },
     cellType: 'void'
   }
@@ -332,13 +332,13 @@ export function notGateEntry(): NotCell {
   }
 }
 
-export function debugEntry(i = 'NaN') {
+export function debugEntry(i = 'NaN'): Cell {
   return {
-    position: null,
+    position: null as any,
     state: {
       i
-    },
-    cellType: 'debug'
+    } as any,
+    cellType: 'debug' as any
   }
 }
 

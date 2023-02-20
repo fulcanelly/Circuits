@@ -3,7 +3,7 @@ import { sendScaleChange, sendSelectTool, sendShiftChange, sendTileClickEvent, s
 import { settings } from './settings';
 import { Switch } from '@mui/material';
 import { notGateEntry, powerSourceEntry, ShowByEntryCircuit, voidEntry, wireEntry } from './circuit';
-import { Position } from './model';
+import { Cell, Position } from './model';
 
 //===========================
 // Interface
@@ -82,7 +82,7 @@ export function resizeCanvas(canvas) {
 //main component where all circuits should be located in
 export function Grid({ dispatch, children }) {
   const canvasRef = useRef(null)
-  const [selected, setSelected] = useState<Position | null>()
+  const [selected, setSelected] = useState<Position | undefined>()
 
   const style = {
     width: `${settings.cellSize * settings.gridSize}px`,
@@ -119,7 +119,7 @@ export function Grid({ dispatch, children }) {
   }
 
   const handleMouseLeave = (event) => {
-    setSelected(null)
+    setSelected(undefined)
   }
 
   const handleMouseMove = (event) => {
@@ -195,7 +195,7 @@ export function ToolSelector({dispatch, state}) {
     flexShrink: '2',
   }
 
-  const entryList = [
+  const entryList: Cell[] = [
     voidEntry(),
     wireEntry(0),
     wireEntry(1),

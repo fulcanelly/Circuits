@@ -26,8 +26,6 @@ export function rotateTimes<T>(arr: T[], times: number = 1): T[] {
   return result
 }
 
-const a = R.identity(1)
-
 export function rotateReverseTimes<T>(arr: T[], times: number = 1): T[] {
   let result = arr
   for (let index = 0; index < times; index++) {
@@ -35,7 +33,6 @@ export function rotateReverseTimes<T>(arr: T[], times: number = 1): T[] {
   }
   return result
 }
-
 
 const pinTypes = new class {
   output(id: any = null): PinInfo {
@@ -92,30 +89,6 @@ export function getNeighbours({ x, y }): Position[] {
       y: R.add(y)}))
 }
 
-
-// need it since bug
-// TODO solve
-export function getNeighbours2(pos: Position): Position[]{
-  return [
-    [  1,  0  ],
-    [  0, -1  ],
-    [ -1,  0  ],
-    [  0,  1  ],
-  ]
-  .map(([x, y]) => ({ x, y }))
-  .map(
-    R.evolve({
-      x: R.add(pos.x),
-      y: R.add(pos.y)}))
-}
-
-export function getNearWithTouchingIndex2(pos: Position): Array<{ position: Position, touching: PinIndex }> {
-  const near = getNeighbours2(pos)
-  const touching = [ 2, 3, 0, 1 ]
-  return R.zip(near, touching)
-    .map(([position, touching]) => ({ position, touching } as { position: Position, touching: PinIndex }))
-}
-
 export function getNearWithTouchingIndex(pos: Position): Array<{ position: Position, touching: PinIndex }> {
   const near = getNeighbours(pos)
   const touching = [ 2, 3, 0, 1 ]
@@ -127,12 +100,6 @@ let cellsLens = R.lensPath(
   buildPath(_ => _.cells)
 )
 
-function cellDotsFromVisual(visual) {
-  let datasheet = datasheets.find(data => isMatch(data.pattern, visual))
-  //datasheet.pinInfo
-}
-
-
 const valueLens = R.lensPath(
     buildPath(_ => _.value))
 
@@ -141,10 +108,6 @@ const valueLens = R.lensPath(
 
 //getCellState :: Cell -> Pins -> State
 
-
-//suspect:
-// 1) input is taken not from around cells but from itself
-// 2) input_pins == reverse(output_pins)
 
 export type Datasheet = {
     pattern: any,
@@ -165,14 +128,6 @@ export type Datasheet = {
 //
 //           pinInfo[1]
 
-// bug (?):
-
-//           pinInfo[1]
-//               __
-//  pinInfo[0]  /_ /  pinInfo[2]
-//
-//           pinInfo[3]
-
 // ========================
 
 // ========================
@@ -192,14 +147,6 @@ export const notDatasheet = {
     pinTypes.input(1),
   ],
 
-  // pinInfo: [
-  //   pinTypes.none(),
-  //   pinTypes.output(1),
-  //   pinTypes.none(),
-  //   pinTypes.input(1),
-  // ],
-
-  //may be powered -> pinCells works wrong(inverted)
   toPins(cell: NotCell) {
     const pins = this.pinInfo.map(it => {
       if (it.type == 'output') {
@@ -216,7 +163,6 @@ export const notDatasheet = {
       actual: cell,
       rotation,
       pins: rotateTimes(pins, floorMod(rotation, 4))
-      // TODO why +2 is needed ?
     }
   },
 
@@ -226,35 +172,11 @@ export const notDatasheet = {
       .map((pcell, index) => pcell?.pins[getOppositeIndex(index)].value)
 
     const [,out,,input] = rotateReverseTimes(attachedPinValues, floorMod(self.rotation, 4))
-   // return R.set(actualStatePoweredLens, true, self)
 
     return R.set(actualStatePoweredLens, !input, self)
   }
 
-  //???
-  // update(cells: PinCell[], self: PinCell): PinCell {
-  //   const actualStatePoweredLens = R.lensPath(
-  //     buildPath(_ => _.actual.state.powered))
-
-  //   const pinConnections = R.zip(
-  //     self.pins, getNearWithTouchingIndex(self.position))//2
-  //       .map(([it, against]) => ({ it, against, index: getOppositeIndex(against.touching) }))
-
-  //   const [,input,,out] = rotateReverseTimes(pinConnections, floorMod(self.rotation, 4))
-
-
-  //   const inputCell = findByPosition(cells, input.against.position)
-
-  //   if (inputCell) {
-  //     const value = inputCell.pins[input.index].value
-  //     return R.set(actualStatePoweredLens, !value, self)
-  //   }
-
-  //   return R.set(actualStatePoweredLens, true, self)
-  // }
-
 }
-
 
 export const datasheets: Datasheet[] = [
 
@@ -309,14 +231,6 @@ export const datasheets: Datasheet[] = [
     ],
 
     toPins(cell: WireCell) {
-      try {
-        throw new Error()
-      }
-      catch(e) {
-       // console.log(e)
-      }
-     // console.log("MEOW")
-
       const pins = this.pinInfo.map(it => {
         if (it.type == 'bidirect') {
           return R.set(valueLens, Boolean(cell.state.powered), it)
@@ -511,13 +425,9 @@ export const datasheets: Datasheet[] = [
     }
   }
 
-
-
 ]
 
-
-
-export function findDatasheet(cell) {
+export function findDatasheet(cell: Cell): Datasheet | undefined {
   return datasheets.find(data => isMatch(data.pattern, cell))
 }
 
@@ -526,44 +436,8 @@ export function visualToPins(cell: Cell): PinCell {
 }
 
 
-const statePoweredLens = R.lensPath(
-    buildPath(_ => _.state.powered)
-  )
-
-const updater = (pinsCells, cell) => {
-  if (isMatch(datasheets[0].pattern, cell.actual)) {
-    const around = getNearWithTouchingIndex(cell.position)
-      .map(neighbour => {
-        const foundCell = pinsCells.find(pcell => R.equals(pcell.position, neighbour.position))
-        if (foundCell) {
-          return foundCell.pins[neighbour.touching].value
-        } else {
-          return false
-        }
-      })
-
-      const [_, a, __, b] = rotateReverseTimes(around, cell.rotation)
-
-      if (a || b) {
-        return R.set(statePoweredLens, true, cell.actual)
-      } else {
-        return R.set(statePoweredLens, false, cell.actual)
-      }
-  }
-
-  if (cell.actual.cellType == 'power') {
-    //console.log("WA!")
-
-    return cell.actual
-  }
-
-  throw 'idk'
-}
-
 export function updateState(state: State): State {
   const pinsCells = state.cells.map(visualToPins)
   return R.set(cellsLens, updateCells(pinsCells), state)
-  // return R.set(
-  //   cellsLens, pinsCells.map(R.curry(updater)(pinsCells)), state)
 }
 

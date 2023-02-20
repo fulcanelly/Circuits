@@ -1,7 +1,7 @@
 
 import { initState } from "./reducer"
 import * as R from 'ramda'
-import { Datasheet, floorMod, getNearWithTouchingIndex } from "./engine"
+import { actualStatePoweredLens, Datasheet, floorMod, getNearWithTouchingIndex } from "./engine"
 
 export type Mode = {
         editing: boolean
@@ -195,7 +195,6 @@ function pinCellToCell(cells: PinCell[]): Cell[] {
     return cells.map(it => it.actual)
 }
 
-const actualStatePoweredLens = R.lensPath(["actual", "state", "powered"])
 
 export function updateCells(cells: PinCell[]): Cell[] {
     let [wires, rest] = findWires(cells)
