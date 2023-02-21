@@ -1,7 +1,7 @@
 import * as R from 'ramda'
 //import { buildModelOfState } from './nothing';
 import { debugEntry, drawShuntWire } from './circuit'
-import { Cell, findByPosition, getConnectedTo, getOppositeIndex, NotCell, PinCell, PinIndex, PinInfo, Position, State, updateCells, WireCell } from './model';
+import { Cell, findByPosition, getConnectedTo, getOppositeIndex, NotCell, PinCell, PinIndex, PinInfo, Position, State, updateCellsNToActuall, WireCell } from './model';
 import { buildPath, isMatch } from './utils'
 
 
@@ -167,11 +167,11 @@ export const notDatasheet = {
   },
 
   update(all: PinCell[], self: PinCell): PinCell {
-    const attachedPinValues = getNeighbours(self.position)
+    const attachedPinValues = getNeighbours(self.actual.position)
       .map(pos => findByPosition(all, pos))
       .map((pcell, index) => pcell?.pins[getOppositeIndex(index)].value)
 
-    const [,out,,input] = rotateReverseTimes(attachedPinValues, floorMod(self.rotation, 4))
+    const [,out,,input] = rotateReverseTimes(attachedPinValues, floorMod(self.actual.state.rotation, 4))
 
     return R.set(actualStatePoweredLens, !input, self)
   }
@@ -438,6 +438,6 @@ export function visualToPins(cell: Cell): PinCell {
 
 export function updateState(state: State): State {
   const pinsCells = state.cells.map(visualToPins)
-  return R.set(cellsLens, updateCells(pinsCells), state)
+  return R.set(cellsLens, updateCellsNToActuall(pinsCells), state)
 }
 

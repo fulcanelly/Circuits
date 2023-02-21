@@ -59,7 +59,7 @@ export type NotCell = {
         }
     } & CellBase
 
-export type Cell = PowerCell | WireCell | NotCell | VoidCell
+export type Cell = (PowerCell | WireCell | NotCell | VoidCell) & CellBase
 
 
 export type Input = {
@@ -71,7 +71,7 @@ export type Input = {
 export type Wire = {
         cells: PinCell[]
         inputs: Input[]
-        powered: boolean
+       // powered: boolean
     }
 
 
@@ -84,9 +84,7 @@ export type PinInfo = {
     }
 
 export type PinCell = {
-        position: Position
         actual: Cell
-        rotation: number
         pins: PinInfo[]
         data: Datasheet
     }
@@ -101,7 +99,7 @@ export function getOppositeIndex(x: number) {
 
 
 export function findByPosition(pool: PinCell[], pos: Position): PinCell | undefined {
-    return pool.find(cell => R.equals(cell.position, pos))
+    return pool.find(cell => R.equals(cell.actual.position, pos))
 }
 
 export type ConnectionType = {
@@ -111,10 +109,10 @@ export type ConnectionType = {
     }
 
 export function getConnectedTo(pool: PinCell[], center: PinCell): ConnectionType[] {
-    return getNearWithTouchingIndex(center.position)
+    return getNearWithTouchingIndex(center.actual.position)
         .map(near => {
             return {
-                found: pool.find(cell => R.equals(cell.position, near.position))!,
+                found: pool.find(cell => R.equals(cell.actual.position, near.position))!,
                 ...near
             }
         })
@@ -147,13 +145,12 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
     let wire: Wire = {
         cells: [start],
         inputs: [],
-        powered: false,
     }
 
     while (queue.length) {
         getConnectedTo(rest, queue.shift()!)
             .forEach(cell => {
-
+                //group by
                 if (cell.found.actual.cellType == 'wire') {
                     wire.cells.push(cell.found)
                     queue.push(cell.found)
@@ -196,26 +193,24 @@ function pinCellToCell(cells: PinCell[]): Cell[] {
 }
 
 
-export function updateCells(cells: PinCell[]): Cell[] {
+export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
     let [wires, rest] = findWires(cells)
     let result: PinCell[] = []
 
+    // update wires
     for (let wire of wires) {
         const powered = wire.inputs.some(
             input => getValueAt(rest, input)
         )
 
-        wire.powered = powered
-
-        const wireTiles = wire.cells.map(cell => {
-            return R.set(actualStatePoweredLens, powered, cell)
-        })
+        const wireTiles = wire.cells.map(cell => R.set(actualStatePoweredLens, powered, cell))
 
         result.push(...wireTiles)
     }
 
     result.push(...rest)
 
+    // update gates
     const resultCopy = [...result]
     for (const i in resultCopy) {
 
@@ -228,3 +223,4 @@ export function updateCells(cells: PinCell[]): Cell[] {
 
     return pinCellToCell(result)
 }
+

@@ -1,5 +1,5 @@
 import { actualStatePoweredLens, datasheets, floorMod, getNeighbours, notDatasheet, rotateReverseTimes, rotateTimes, visualToPins } from "./engine"
-import { Cell, findByPosition, findWires, getOppositeIndex, NotCell, PinCell, PowerCell, updateCells, WireCell } from "./model"
+import { Cell, findByPosition, findWires, getOppositeIndex, NotCell, PinCell, PowerCell, updateCellsNToActuall, WireCell } from "./model"
 import * as R from 'ramda'
 import { buildPath, isMatch } from './utils'
 import { genericWire } from "./reducer"
@@ -195,7 +195,7 @@ describe("model", () => {
             }, genericWire)
 
 
-        let cells = updateCells(
+        let cells = updateCellsNToActuall(
             helpers.cells2PinCells([first, second]))
 
         let updatedWire = cells.find(cell => cell.cellType == 'wire') as WireCell
@@ -228,7 +228,7 @@ describe("model", () => {
             }
         }
 
-        let cells = updateCells(
+        let cells = updateCellsNToActuall(
             helpers.cells2PinCells([first, second]))
 
         let updatedWire = cells.find(cell => cell.cellType == 'wire') as WireCell
@@ -261,7 +261,7 @@ describe("model", () => {
             }
         }
 
-        let cells = updateCells(
+        let cells = updateCellsNToActuall(
             helpers.cells2PinCells([first, second]))
 
         let updatedNot = cells.find(cell => (cell as any).id == 1) as NotCell
@@ -442,13 +442,14 @@ describe("utils", () => {
     it("rotateTimes(arr, n)[x] should be same as arr[floorMod(n + x, arr.length)], 0 ≤ x < arr.length, n >= 0", () => {
         const arr = [0, 1, 2, 3]
 
-        for (let i = 0; i < 100; i++) {
+        for (let i = -100; i < 100; i++) {
             for (let j = 0; j < arr.length; j++) {
-                const n = i
-                const x = j
+                const n = Math.abs(i) // rotation
+                const x = j // index
 
-                const a = floorMod(n, arr.length)
-                const b = floorMod(x, arr.length)
+                const adjustedIndex = (x + Math.abs(n)) % arr.length
+
+                expect(rotateTimes(arr, n)[x]).toBe(arr[adjustedIndex])
 
                 expect(rotateTimes(arr, n)[x]).toBe(arr[floorMod(n + x, arr.length)])
             }
