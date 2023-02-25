@@ -1,37 +1,65 @@
 
 import { initState } from "./reducer"
 import * as R from 'ramda'
-import { Datasheet, floorMod, getNearWithTouchingIndex } from "./engine"
+import { actualStatePoweredLens, Datasheet, floorMod, getNearWithTouchingIndex } from "./engine"
 
+export type Mode = {
+        editing: boolean
+    }
+
+
+export type Field = {
+        scale: number,
+        shift: Position
+    }
+
+export type State = {
+        mode: Mode
+        cells: Cell[],
+        field: Field,
+        selected: {
+            index: number | null,
+            entry: Cell | null
+        }
+        hovered: Position | null
+    }
 
 export type Position = { x: number, y: number }
 
 
 export type CellBase = {
-    position: Position
+    position: Position// | null
     state: {
         rotation: number
     }
-    cellType: string
 }
 
+export type VoidCell ={
+        cellType: 'void'
+    } & CellBase
 
 export type WireType =  0 | 1 | 2 | 3
 
-export type WireCells = {
+export type WireCell = {
         cellType: 'wire'
         state: {
             wireType: WireType
             powered: boolean
         }
-    }
+    }  & CellBase
 
 export type PowerCell = {
         cellType: 'power'
-    }
+    } & CellBase
 
+export type NotCell = {
+        cellType: 'not',
+        state: {
+            powered: boolean
+        }
+    } & CellBase
 
-export type Cell = (PowerCell | WireCells) & CellBase
+export type Cell = (PowerCell | WireCell | NotCell | VoidCell) & CellBase
 
 
 export type Input = {
@@ -42,8 +70,8 @@ export type Input = {
 
 export type Wire = {
         cells: PinCell[]
-        inputs: Input[] 
-        powered: boolean
+        inputs: Input[]
+       // powered: boolean
     }
 
 
@@ -51,14 +79,12 @@ export type Wire = {
 //TODO Composed
 
 export type PinInfo = {
-        type: 'output' | 'input' | 'none' | 'bidirect' 
-        value?: boolean | null 
+        type: 'output' | 'input' | 'none' | 'bidirect'
+        value?: boolean | null
     }
 
 export type PinCell = {
-        position: Position
         actual: Cell
-        rotation: number 
         pins: PinInfo[]
         data: Datasheet
     }
@@ -73,7 +99,7 @@ export function getOppositeIndex(x: number) {
 
 
 export function findByPosition(pool: PinCell[], pos: Position): PinCell | undefined {
-    return pool.find(cell => R.equals(cell.position, pos))
+    return pool.find(cell => R.equals(cell.actual.position, pos))
 }
 
 export type ConnectionType = {
@@ -83,25 +109,25 @@ export type ConnectionType = {
     }
 
 export function getConnectedTo(pool: PinCell[], center: PinCell): ConnectionType[] {
-    return getNearWithTouchingIndex(center.position)
+    return getNearWithTouchingIndex(center.actual.position)
         .map(near => {
             return {
-                found: pool.find(cell => R.equals(cell.position, near.position))!,
+                found: pool.find(cell => R.equals(cell.actual.position, near.position))!,
                 ...near
             }
         })
-        .filter(near => {   
+        .filter(near => {
             const found = near.found //pool.find(cell => R.equals(cell.position, near.position))
-            
+
             if (!found) {
-                return false 
+                return false
             }
 
             return R.all(
-                pin => ['bidirect', 'output', 'input'].includes((pin.type)), 
+                pin => ['bidirect', 'output', 'input'].includes((pin.type)),
                 [found.pins[near.touching], center.pins[getOppositeIndex(near.touching)]])
-      
-        }) 
+
+        })
 
 }
 
@@ -119,37 +145,36 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
     let wire: Wire = {
         cells: [start],
         inputs: [],
-        powered: false,
     }
 
-    while (queue.length) {  
+    while (queue.length) {
         getConnectedTo(rest, queue.shift()!)
             .forEach(cell => {
-
+                //group by
                 if (cell.found.actual.cellType == 'wire') {
                     wire.cells.push(cell.found)
                     queue.push(cell.found)
                     rest = R.without(wire.cells, pinCells)
                 } else {
                     wire.inputs.push({
-                        pinIndex: getOppositeIndex(cell.touching) as PinIndex,
-                        position: cell.position 
+                        pinIndex: (cell.touching) as PinIndex,
+                        position: cell.position
                     })
                 }
 
-            }) 
+            })
     }
 
     return [wire, R.without(wire.cells, pinCells)]
 
 }
 
-
-export function findWires(tiles: PinCell[]): [Wire[], PinCell[]]{
+export function findWires(tiles: PinCell[]): [Wire[], PinCell[]] {
+    //todo .filter wire
     let wires: Wire[] = []
-    while (tiles.find(p => p.actual.cellType == 'wire')) {   
+    while (tiles.find(p => p.actual.cellType == 'wire')) {
         let [wire, tilesUpd] = getWire(tiles)
-        tiles = tilesUpd 
+        tiles = tilesUpd
         if (wire) {
             wires.push(wire)
         }
@@ -158,52 +183,44 @@ export function findWires(tiles: PinCell[]): [Wire[], PinCell[]]{
     return [wires, tiles]
 }
 
-
 export function getValueAt(cells: PinCell[], input: Input): boolean {
     const samePosition = cell => R.equals(cell.position, input.position)
     return cells.find(samePosition)?.pins[input.pinIndex].value!
 }
 
-function pinCellToCell(cells) {
+function pinCellToCell(cells: PinCell[]): Cell[] {
     return cells.map(it => it.actual)
 }
 
-const actualStatePoweredLens = R.lensPath(["actual", "state", "powered"])
 
-export function updateCells(cells: PinCell[]): Cell[] {
+export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
     let [wires, rest] = findWires(cells)
     let result: PinCell[] = []
 
-
+    // update wires
     for (let wire of wires) {
         const powered = wire.inputs.some(
             input => getValueAt(rest, input)
         )
 
-        wire.powered = powered
-
-        const wireTiles = wire.cells.map(cell => {
-            return R.set(actualStatePoweredLens, powered, cell)
-        }) 
+        const wireTiles = wire.cells.map(cell => R.set(actualStatePoweredLens, powered, cell))
 
         result.push(...wireTiles)
     }
 
     result.push(...rest)
 
+    // update gates
     const resultCopy = [...result]
     for (const i in resultCopy) {
-        
-        const gate = resultCopy[i]
-        
-        if (gate.data.update) {
-            result[i] = gate.data.update?.(resultCopy, gate) 
-        }
 
+        const gate = resultCopy[i]
+
+        if (gate.data.update) {
+            result[i] = gate.data.update?.(resultCopy, gate)
+        }
     }
 
-
     return pinCellToCell(result)
-
-
 }
+
