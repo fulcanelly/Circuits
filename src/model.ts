@@ -224,3 +224,8 @@ export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
     return pinCellToCell(result)
 }
 
+
+
+function x() {
+  return 1 as any as StaticRangeInit;
+}
