@@ -5,16 +5,25 @@ on: [push]
 
 jobs:
     eslint:
-      name: runner / eslint
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
-        - uses: actions/setup-node@v3
-          with:
-            node-version: "20"
-        - run: npm i --force
-        - name: 'Run reviewdog'
-          uses: reviewdog/action-eslint@v1
-          with:
-            reporter: github-check
-            eslint_flags: "src/*"
+        name: runner / eslint
+        runs-on: ubuntu-latest
+
+        steps:
+          - uses: actions/checkout@v2
+
+          - uses: actions/setup-node@v2
+            with:
+              node-version: 14
+
+          - name: Install dependencies
+            run: npm i --force  # OR: yarn 
+
+          - name: Run eslint on changed files
+            uses: tj-actions/eslint-changed-files@v20
+            with:
+              config_path: "..eslintrc.yml"
+#               ignore_path: "/path/to/.eslintignore"
+              extra_args: "--max-warnings=0"
+              file_extensions: |
+                **/*.ts
+                **/*.tsx
