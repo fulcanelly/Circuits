@@ -24,16 +24,17 @@ function startingCells(): Cell[] {
 }
 
 
+function loh(a,  b) {
+  return 11 + b
+}
 // TODO
 
 const events = {
-
   toggle_editing: {
     send(dispatch: React.Dispatch<Action>) {
     },
 
     handle() {
-
     }
   }
 }
