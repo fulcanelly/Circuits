@@ -13,11 +13,14 @@ jobs:
 
           - uses: actions/setup-node@v2
             with:
-              node-version: 14
+              node-version: 19
 
           - name: Install dependencies
             run: npm i --force  # OR: yarn 
 
+          - name: Install other deps
+            run: npm install --force --save-dev eslint-plugin-n@latest 
+            
           - name: Run eslint on changed files
             uses: tj-actions/eslint-changed-files@v20
             with:
