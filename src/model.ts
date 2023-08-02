@@ -226,6 +226,6 @@ export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
 
 
 
-function x() {
-  return 1 as any as StaticRangeInit;
+function x   () {
+  return 1 /2     as  any as StaticRangeInit;
 }
