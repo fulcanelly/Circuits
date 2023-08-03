@@ -184,6 +184,7 @@ export function findWires(tiles: PinCell[]): [Wire[], PinCell[]] {
 }
 
 export function getValueAt(cells: PinCell[], input: Input): boolean {
+    // olosdkkf
     const samePosition = cell => R.equals(cell.position, input.position)
     return cells.find(samePosition)?.pins[input.pinIndex].value!
 }
@@ -191,7 +192,6 @@ export function getValueAt(cells: PinCell[], input: Input): boolean {
 function pinCellToCell(cells: PinCell[]): Cell[] {
     return cells.map(it => it.actual)
 }
-
 
 export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
     let [wires, rest] = findWires(cells)
@@ -224,3 +224,8 @@ export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
     return pinCellToCell(result)
 }
 
+
+
+function x   () {
+  return  1 /2    as  any as StaticRangeInit;
+}
