@@ -48,7 +48,7 @@ jobs:
             run: npm i --force  # OR: yarn
 
           - name: Running eslint
-            run: npx eslint $(git diff --name-only HEAD | grep -E '\.(ts|tsx)$' | xargs) --format json > eslinted.json
+            run: npx eslint $(git diff --name-only HEAD^ | grep -E '\.(ts|tsx)$' | xargs) --format json > eslinted.json
 
           - name: Running filter
             run: ruby gitdiff/filter_diff.rb gitdiff/gitdiff.yaml eslinted.json
