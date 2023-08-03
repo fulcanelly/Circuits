@@ -60,8 +60,8 @@ jobs:
           - name: Running reviewdog
             run: cat filtered.json | reviewdog  -f=rdjson -reporter=github-pr-review
 
-          - name: Annotate
-            uses: actions/annotations
+          # - name: Annotate
+          #   uses: actions/annotations
 
           # # - name: Adding annotations
 
