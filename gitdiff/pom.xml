@@ -120,6 +120,11 @@
           <!-- <useIncrementalCompilation>false</useIncrementalCompilation> -->
 
           <annotationProcessorPaths combine.children="append">
+	          <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>1.18.28</version>
+            </path>
             <path>
               <groupId>info.picocli</groupId>
               <artifactId>picocli-codegen</artifactId>
