@@ -17,6 +17,12 @@ jobs:
             with:
               node-version: 19
 
+          - name: Set up Ruby
+            uses: ruby/setup-ruby@v1
+            with:
+              ruby-version: '3.0.0'
+              bundler-cache: true
+
           - name: Set up JDK 17
             uses: actions/setup-java@v3
             with:
@@ -36,19 +42,30 @@ jobs:
               mvn install -f gitdiff
 
           - name: Running gitdiff
-            run: java -jar gitdiff/target/gitdiff-0.1.jar
-            
-          - name: Install dependencies
+            run: java -jar gitdiff/target/gitdiff-0.1.jar > gitdiff/gitdiff.yaml
+
+          - name: Install npm dependencies
             run: npm i --force  # OR: yarn
 
-          - name: Install other deps
-            run: npm install --force --save-dev eslint-plugin-n@latest
+          - name: Running eslint
+            run: npx eslint $(git diff --name-only HEAD | grep -E '\.(ts|tsx)$' | xargs) --format json > eslinted.json
 
-          - name: Run eslint on changed files
-            uses: tj-actions/eslint-changed-files@v20
-            with:
-              config_path: ".eslintrc.yml"
-              fail_on_error: false
-              file_extensions: |
-                **/*.ts
-                **/*.tsx
+          - name: Running filter
+            run: ruby gitdiff/filter_diff.rb gitdiff/gitdiff.yaml eslinted.json
+
+          # # - name: Adding annotations
+
+          # - name: Install dependencies
+          #   run: npm i --force  # OR: yarn
+
+          # - name: Install other deps
+          #   run: npm install --force --save-dev eslint-plugin-n@latest
+
+          # - name: Run eslint on changed files
+          #   uses: tj-actions/eslint-changed-files@v20
+          #   with:
+          #     config_path: ".eslintrc.yml"
+          #     fail_on_error: false
+          #     file_extensions: |
+          #       **/*.ts
+          #       **/*.tsx
