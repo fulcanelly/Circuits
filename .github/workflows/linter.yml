@@ -51,7 +51,17 @@ jobs:
             run: npx eslint $(git diff --name-only HEAD^ | grep -E '\.(ts|tsx)$' | xargs) --format json > eslinted.json || true
 
           - name: Running filter
-            run: ruby gitdiff/filter_diff.rb gitdiff/gitdiff.yaml eslinted.json
+            run: ruby gitdiff/filter_diff.rb gitdiff/gitdiff.yaml eslinted.json > filtered.json
+
+          - uses: reviewdog/action-setup@v1
+            with:
+              reviewdog_version: latest
+
+          - name: Running reviewdog
+            run: cat filtered.json | reviewdog  -f=rdjson -reporter=github-pr-review
+
+          - name: Annotate
+            uses: actions/annotations
 
           # # - name: Adding annotations
 
