@@ -11,6 +11,25 @@ changed_regions = YAML.load(File.read ARGV.first)
 warnings = JSON.load(File.read ARGV.last)
 
 
+
+def map_for_reviewdog(file, warn)
+    {
+        location: {
+            path: file,
+            range: {
+                start: {
+                    line: warn['line'],
+                    column: warn['column']
+                }
+            }
+        },
+        code: {
+            value: warn['ruleId']
+        },
+        message: warn['message']
+    }
+end
+
 warnings.each do |warning|
 
     path = warning['filePath']
@@ -25,7 +44,7 @@ warnings.each do |warning|
         range = changed.find do _1 === line end
         next unless range
 
-        puts JSON.dump(messages)
+        puts JSON.dump(map_for_reviewdog path, messages)
     end
 end
 
