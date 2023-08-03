@@ -25,7 +25,7 @@ warnings.each do |warning|
         range = changed.find do _1 === line end
         next unless range
 
-        pp messages
+        puts JSON.dump(messages)
     end
 end
 
