@@ -60,7 +60,7 @@ jobs:
           - name: Running reviewdog
             env:
               REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            run: cat filtered.json | reviewdog  -f=rdjson -reporter=github-check
+            run: cat filtered.json | reviewdog  -f=rdjsonl -reporter=github-check
             # github-pr-review
 
           # - name: Annotate
