@@ -1,0 +1,6 @@
+applicationType: cli
+defaultPackage: com.fulcanelly.gitdiff
+testFramework: junit
+sourceLanguage: java
+buildTool: maven
+features: [app-name, gitlab-workflow-ci, http-client-test, java, junit, logback, maven, maven-enforcer-plugin, picocli, picocli-java-application, picocli-junit, properties, readme, serialization-jackson, shade]

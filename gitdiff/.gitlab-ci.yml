@@ -1,0 +1,34 @@
+image: eclipse-temurin:17
+variables:
+  MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+build:
+  stage: build
+  script: ./mvnw $MAVEN_CLI_OPTS compile
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: push
+    paths:
+      - target
+      - .mvn
+test:
+  stage: test
+  script: ./mvnw $MAVEN_CLI_OPTS verify
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: pull
+    paths:
+      - target
+      - .mvn
+package:
+  stage: deploy
+  script: ./mvnw $MAVEN_CLI_OPTS package
+  artifacts:
+    paths:
+      - target/gitdiff-*.jar
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: pull
+    paths:
+      - target
+      - .mvn
