@@ -151,18 +151,18 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
         getConnectedTo(rest, queue.shift()!)
             .forEach(cell => {
                 //group by
-                if (cell.found.actual.cellType == 'wire') {
+                if (cell.found.actual.cellType === 'wire') {
                     wire.cells.push(cell.found)
                     queue.push(cell.found)
-                    rest = R.without(wire.cells, pinCells)
                 } else {
                     wire.inputs.push({
                         pinIndex: (cell.touching) as PinIndex,
                         position: cell.position
                     })
                 }
-
             })
+
+        rest = R.without(wire.cells, rest)
     }
 
     return [wire, R.without(wire.cells, pinCells)]
@@ -172,7 +172,7 @@ function getWire(pinCells: PinCell[]): [Wire | null, PinCell []] {
 export function findWires(tiles: PinCell[]): [Wire[], PinCell[]] {
     //todo .filter wire
     let wires: Wire[] = []
-    while (tiles.find(p => p.actual.cellType == 'wire')) {
+    while (tiles.find(p => p.actual.cellType === 'wire')) {
         let [wire, tilesUpd] = getWire(tiles)
         tiles = tilesUpd
         if (wire) {
