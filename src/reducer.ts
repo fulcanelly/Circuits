@@ -4,7 +4,7 @@
 import * as R from 'ramda'
 import { updateState } from './engine'
 import { Cell, NotCell, Position, State, WireCell } from './model'
-import { buildPath } from './utils'
+import { buildLens, buildPath } from './utils'
 
 export const genericWire: Cell = {
   cellType: 'wire',
@@ -64,7 +64,7 @@ export function initState(): State {
 }
 
 //TODO
-type Action = {
+export type Action = {
     type: string
     [rest: string]: any
   }
@@ -123,33 +123,28 @@ export function sendToggleEditing(dispatch: React.Dispatch<Action>) {
   })
 }
 
-export function handleTileHover(state: State, action: Action) {
+export function handleTileHover(state: State, action: Action): State {
   return R.set(
     R.lensPath(['hovered']), action.pos, state)
 }
 
-function handleSelectTool(state, action: Action) {
-  let selectedIndexLens = R.lensPath(
-    buildPath(_ => _.selected.index))
+export const stateLens = buildLens<State>
 
-  let selectedEntryLens = R.lensPath(
-    buildPath(_ => _.selected.entry))
-
-  return R.set(
-    selectedEntryLens, action.entry, R.set(
-      selectedIndexLens, action.index, state))
+function handleSelectTool(state: State, action: Action): State {
+  return R.pipe(
+    R.set(stateLens().selected.entry._(), action.entry),
+    R.set(stateLens().selected.index._(), action.index))
+    (state)
 }
 
-export function handleToggleEditing(state: State, action: Action) {
-  const modeEditingLens = R.lensPath(
-    buildPath(_ => _.mode.editing)
-  )
+export function handleToggleEditing(state: State, action: Action): State {
+  const modeEditingLens = buildLens<State>().mode.editing._()
 
   let lastEditingState = R.view(modeEditingLens, state)
   return R.set(modeEditingLens, !lastEditingState, state)
 }
 
-export function handleTileClick(state: State, action: Action) {
+export function handleTileClick(state: State, action: Action): State {
   if (!state.mode.editing) {
     return state
   }
@@ -160,10 +155,10 @@ export function handleTileClick(state: State, action: Action) {
   }
 
   //void is special tile type so it means remove current tile
-  if (state.selected.entry.cellType == 'void') {
+  if (state.selected.entry.cellType === 'void') {
     const cells = [
       ...state.cells.filter(
-        item => JSON.stringify(item.position) != JSON.stringify(action.pos)
+        item => JSON.stringify(item.position) !== JSON.stringify(action.pos)
       )
     ]
 
@@ -183,7 +178,7 @@ export function handleTileClick(state: State, action: Action) {
     //  genDebugCellFor(action.pos),
      // ...genDebugCellsFor(action.pos),
       ...state.cells.filter(
-        item => JSON.stringify(item.position) != JSON.stringify(action.pos)
+        item => JSON.stringify(item.position) !== JSON.stringify(action.pos)
       )
     ]
 
@@ -194,12 +189,12 @@ export function handleTileClick(state: State, action: Action) {
 }
 
 
-function handleMouseWheelEditing(state: State, action: Action) {
+function handleMouseWheelEditing(state: State, action: Action): State {
   if (state.hovered) {
     //find needed cell
     const cell = state.cells.find(
       item => JSON.stringify(state.hovered)
-        == JSON.stringify(item.position)
+        === JSON.stringify(item.position)
       )
 
     //get index of found cell
@@ -210,8 +205,8 @@ function handleMouseWheelEditing(state: State, action: Action) {
     }
 
     //get lens
-    let rotationLens = R.lensPath(
-      buildPath(_ => _.cells[index].state.rotation)
+    let rotationLens = R.lensPath<State, number>(
+      buildPath<State>(_ => _.cells[index].state.rotation)
     )
 
     let mutation = (x) =>
@@ -223,16 +218,13 @@ function handleMouseWheelEditing(state: State, action: Action) {
   return state
 }
 
-export function handleMouseWheel(state: State, action: Action) {
+export function handleMouseWheel(state: State, action: Action): State {
 
   if (state.mode.editing) {
     return handleMouseWheelEditing(state, action)
   } else {
     const deltaY = action.deltaY
-
-    const fieldScaleLens = R.lensPath(
-      buildPath(_ => _.field.scale)
-    )
+    const fieldScaleLens = buildLens<State>().field.scale._()
 
     const getNewScale = () => {
       let currentScale = state.field.scale
@@ -250,12 +242,10 @@ export function handleMouseWheel(state: State, action: Action) {
 
 }
 
-export function handleShiftChange(state: State, action: Action) {
+export function handleShiftChange(state: State, action: Action): State {
   if (state.mode.editing) return state
 
-  const fieldStateLens = R.lensPath(
-    buildPath(_ => _.field.shift)
-  )
+  const fieldStateLens = buildLens<State>().field.shift._()
 
   const oldShift = R.view(fieldStateLens, state)
 
@@ -272,7 +262,7 @@ export function handleCellsUpdate(state: State, action: Action): State {
   return updateState(state)
 }
 
-export function defaultReducer(state: State, action: Action) {
+export function defaultReducer(state: State, action: Action): State {
   const template = {
     tile_click: handleTileClick,
     edit: handleToggleEditing,
@@ -285,6 +275,6 @@ export function defaultReducer(state: State, action: Action) {
 
   return Object.entries(template)
     .map(([event, handler]) => ({event, handler}))
-    .find(pair => pair.event == action.type)
-    ?.handler(state, action)
+    .find(pair => pair.event === action.type)
+    ?.handler(state, action)!
 }

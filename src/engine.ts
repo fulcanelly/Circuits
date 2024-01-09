@@ -2,7 +2,7 @@ import * as R from 'ramda'
 //import { buildModelOfState } from './nothing';
 import { debugEntry, drawShuntWire } from './circuit'
 import { Cell, findByPosition, getConnectedTo, getOppositeIndex, NotCell, PinCell, PinIndex, PinInfo, Position, State, updateCellsNToActuall, WireCell } from './model';
-import { buildPath, isMatch } from './utils'
+import { buildLens, buildPath, isMatch } from './utils'
 
 
 // needed for rotation
@@ -96,13 +96,9 @@ export function getNearWithTouchingIndex(pos: Position): Array<{ position: Posit
     .map(([position, touching]) => ({ position, touching } as { position: Position, touching: PinIndex }))
 }
 
-let cellsLens = R.lensPath(
-  buildPath(_ => _.cells)
-)
+let cellsLens = buildLens<State>().cells._()
 
-const valueLens = R.lensPath(
-    buildPath(_ => _.value))
-
+const valueLens = buildLens<PinInfo>().value!._()
 
 //toPins :: Cell -> State -> Pins
 
@@ -132,8 +128,11 @@ export type Datasheet = {
 
 // ========================
 
-export const actualStatePoweredLens = R.lensPath(
-    buildPath(_ => _.actual.state.powered))
+
+// buildLens<PinCell>().actual.state.
+
+export const actualStatePoweredLens = buildLens<PinCell>().actual.state.powered?._()!
+
 
 export const notDatasheet = {
   pattern: {
@@ -149,7 +148,7 @@ export const notDatasheet = {
 
   toPins(cell: NotCell) {
     const pins = this.pinInfo.map(it => {
-      if (it.type == 'output') {
+      if (it.type === 'output') {
         return R.set(valueLens, Boolean(cell.state.powered), it)
       } else {
         return it
