@@ -1,7 +1,7 @@
 import * as R from 'ramda'
 //import { buildModelOfState } from './nothing';
 import { debugEntry, drawShuntWire } from './circuit'
-import { Cell, findByPosition, getConnectedTo, getOppositeIndex, NotCell, PinCell, PinIndex, PinInfo, Position, State, updateCellsNToActuall, WireCell } from './model';
+import { Cell, findByPosition, findWires, getConnectedTo, getOppositeIndex, NotCell, PinCell, PinIndex, PinInfo, Position, State, updateWiresAndGatesInState, WireCell } from './model';
 import { buildLens, buildPath, isMatch } from './utils'
 
 
@@ -437,6 +437,17 @@ export function visualToPins(cell: Cell): PinCell {
 
 export function updateState(state: State): State {
   const pinsCells = state.cells.map(visualToPins)
-  return R.set(cellsLens, updateCellsNToActuall(pinsCells), state)
+
+  const complied = state.compiled
+  if (!complied.gates) {
+    let [wires, rest] = findWires(pinsCells)
+    complied.gates = rest
+    complied.wires = wires
+  }
+
+  // const [stateupd, cells] =
+  return updateWiresAndGatesInState(state)
+
+  // return R.set(cellsLens, updateCellsNToActuall(complied.wires!, complied.gates!), state)
 }
 

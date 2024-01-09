@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect, useReducer } from 'react';
-import { defaultReducer, initState, sendCellsUpdate } from './reducer';
+import { defaultReducer, handleMouseWheel, initState, sendCellsUpdate } from './reducer';
 import { Field, Grid, MovableField, Toolbar } from './gui';
 import { CircuitComposer } from './circuit';
 import ReactJson from 'react-json-view'
@@ -13,9 +13,22 @@ import ReactJson from 'react-json-view'
 
 function App() {
 
+
+
   const [state, dispatch] = useReducer(defaultReducer, initState())
 
+
   useEffect(() => {
+    (window as any).state = state
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'r') {
+        // console.log('a')
+
+        dispatch({type:'scale_change', deltaY: -1})
+      }
+    });
+
+
     const interval = setInterval(() => sendCellsUpdate(dispatch), 200)
 
    return () => clearInterval(interval)

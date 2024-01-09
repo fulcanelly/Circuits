@@ -2,8 +2,8 @@
 // State managment
 //===========================
 import * as R from 'ramda'
-import { updateState } from './engine'
-import { Cell, NotCell, Position, State, WireCell } from './model'
+import { updateState, visualToPins } from './engine'
+import { Cell, NotCell, Position, State, WireCell, findWires, updateWiresAndGatesInState } from './model'
 import { buildLens, buildPath } from './utils'
 
 export const genericWire: Cell = {
@@ -44,6 +44,10 @@ export function initState(): State {
   return {
     mode: {
       editing: false
+    },
+
+    compiled: {
+
     },
 
     field: {
@@ -162,10 +166,19 @@ export function handleTileClick(state: State, action: Action): State {
       )
     ]
 
-    return {
-      ...state, cells
-    }
+    const pinsCells = cells.map(visualToPins)
+    let [wires, rest] = findWires(pinsCells)
+
+    const result = R.pipe(
+      R.set(buildLens<State>().compiled.gates!._(), rest),
+      R.set(buildLens<State>().compiled.wires!._(), wires)
+    )(state)
+
+    return updateWiresAndGatesInState({
+      ...result, cells
+    })
   } else {
+
     //else add tile of that type
 
     const newTile = {
@@ -182,12 +195,23 @@ export function handleTileClick(state: State, action: Action): State {
       )
     ]
 
-    return {
-      ...state, cells
-    }
+    const pinsCells = cells.map(visualToPins)
+    let [wires, rest] = findWires(pinsCells)
+
+
+    const result = R.pipe(
+      R.set(buildLens<State>().compiled.gates!._(), rest),
+      R.set(buildLens<State>().compiled.wires!._(), wires)
+    )(state)
+
+    return updateWiresAndGatesInState({
+      ...result, cells
+    })
   }
 }
 
+
+// window.handleMouseWheelEditing = handleMouseWheelEditing;
 
 function handleMouseWheelEditing(state: State, action: Action): State {
   if (state.hovered) {

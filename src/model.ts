@@ -2,6 +2,7 @@
 import { initState } from "./reducer"
 import * as R from 'ramda'
 import { actualStatePoweredLens, Datasheet, floorMod, getNearWithTouchingIndex } from "./engine"
+import { buildLens } from "./utils"
 
 export type Mode = {
         editing: boolean
@@ -16,6 +17,10 @@ export type Field = {
 export type State = {
         mode: Mode
         cells: Cell[],
+        compiled: {
+            wires?: Wire[],
+            gates?: PinCell[]
+        }
         field: Field,
         selected: {
             index: number | null,
@@ -192,35 +197,84 @@ function pinCellToCell(cells: PinCell[]): Cell[] {
     return cells.map(it => it.actual)
 }
 
+export function updateWiresAndGatesInState(state: State): State {
 
-export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
-    let [wires, rest] = findWires(cells)
+    const gates = state.compiled.gates!
+    const wires = state.compiled.wires!
+
+    // const pinsCells = cells.map(visualToPins)
+    // let [wires, rest] = findWires(pinsCells)
+
+    // let [wires, rest] = findWires(cells)
     let result: PinCell[] = []
 
+    const totalWireTiles: Wire[] = []
     // update wires
     for (let wire of wires) {
         const powered = wire.inputs.some(
-            input => getValueAt(rest, input)
+            input => getValueAt(gates, input)
         )
 
         const wireTiles = wire.cells.map(cell => R.set(actualStatePoweredLens, powered, cell))
 
         result.push(...wireTiles)
+        totalWireTiles.push(
+            R.set(buildLens<Wire>().cells._(), wireTiles, wire)
+        )
+        // totalWireTiles.push(...wireTiles)
     }
 
-    result.push(...rest)
+    result.push(...gates)
 
-    // update gates
     const resultCopy = [...result]
     for (const i in resultCopy) {
 
         const gate = resultCopy[i]
 
-        if (gate.data.update) {
+        if (gate.data.update) { //??? maybe just iterate only on gates
             result[i] = gate.data.update?.(resultCopy, gate)
         }
     }
 
-    return pinCellToCell(result)
+    const newGates = gates.map(gate => gate.data.update?.(resultCopy, gate)!)
+    return R.pipe(
+        R.set(buildLens<State>().compiled.gates!._(), newGates),
+        R.set(buildLens<State>().compiled.wires!._(), totalWireTiles),
+        R.set(buildLens<State>().cells._(), pinCellToCell(result))
+        )(state)
+
 }
+
+// export function updateCellsNToActuall(wires: Wire[], gates: PinCell[]): Cell[] {
+
+// // export function updateCellsNToActuall(cells: PinCell[]): Cell[] {
+//     let [wires, rest] = findWires(cells)
+//     let result: PinCell[] = []
+
+//     // update wires
+//     for (let wire of wires) {
+//         const powered = wire.inputs.some(
+//             input => getValueAt(gates, input)
+//         )
+
+//         const wireTiles = wire.cells.map(cell => R.set(actualStatePoweredLens, powered, cell))
+
+//         result.push(...wireTiles)
+//     }
+
+//     result.push(...gates)
+
+//     // update gates
+//     const resultCopy = [...result]
+//     for (const i in resultCopy) {
+
+//         const gate = resultCopy[i]
+
+//         if (gate.data.update) { //??? maybe just iterate only on gates
+//             result[i] = gate.data.update?.(resultCopy, gate)
+//         }
+//     }
+
+//     return pinCellToCell(result)
+// }
 
