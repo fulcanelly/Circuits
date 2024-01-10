@@ -148,6 +148,19 @@ export function handleToggleEditing(state: State, action: Action): State {
   return R.set(modeEditingLens, !lastEditingState, state)
 }
 
+
+export function recompileWires(state: State, cells: Cell[] = state.cells): State {
+  const pinsCells = cells.map(visualToPins)
+  let [wires, rest] = findWires(pinsCells)
+
+  return R.pipe(
+    R.set(buildLens<State>().compiled.gates!._(), rest),
+    R.set(buildLens<State>().compiled.wires!._(), wires),
+    R.set(buildLens<State>().cells._(), cells),
+  )(state)
+}
+
+
 export function handleTileClick(state: State, action: Action): State {
   if (!state.mode.editing) {
     return state
@@ -166,17 +179,7 @@ export function handleTileClick(state: State, action: Action): State {
       )
     ]
 
-    const pinsCells = cells.map(visualToPins)
-    let [wires, rest] = findWires(pinsCells)
-
-    const result = R.pipe(
-      R.set(buildLens<State>().compiled.gates!._(), rest),
-      R.set(buildLens<State>().compiled.wires!._(), wires)
-    )(state)
-
-    return updateWiresAndGatesInState({
-      ...result, cells
-    })
+    return recompileWires(state, cells)
   } else {
 
     //else add tile of that type
@@ -188,25 +191,12 @@ export function handleTileClick(state: State, action: Action): State {
 
     const cells = [
       newTile,
-    //  genDebugCellFor(action.pos),
-     // ...genDebugCellsFor(action.pos),
       ...state.cells.filter(
         item => JSON.stringify(item.position) !== JSON.stringify(action.pos)
       )
     ]
 
-    const pinsCells = cells.map(visualToPins)
-    let [wires, rest] = findWires(pinsCells)
-
-
-    const result = R.pipe(
-      R.set(buildLens<State>().compiled.gates!._(), rest),
-      R.set(buildLens<State>().compiled.wires!._(), wires)
-    )(state)
-
-    return updateWiresAndGatesInState({
-      ...result, cells
-    })
+    return recompileWires(state, cells)
   }
 }
 
@@ -236,7 +226,7 @@ function handleMouseWheelEditing(state: State, action: Action): State {
     let mutation = (x) =>
       (x + Math.sign(action.deltaY))
 
-    return R.over(rotationLens, mutation, state)
+    return recompileWires(R.over(rotationLens, mutation, state))
   }
 
   return state
