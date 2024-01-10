@@ -108,7 +108,7 @@ const valueLens = buildLens<PinInfo>().value!._()
 export type Datasheet = {
     pattern: any,
     pinInfo: PinInfo[],
-    toPins: (cell: any) => PinCell,
+    toPins: (cell: Cell) => PinCell,
     update?: (cells: PinCell[], self: PinCell) => PinCell
   }
 
@@ -131,7 +131,7 @@ export type Datasheet = {
 
 // buildLens<PinCell>().actual.state.
 
-export const actualStatePoweredLens = buildLens<PinCell>().actual.state.powered?._()!
+export const actualStatePoweredLens = buildLens<PinCell>().actual.state.powered!._()!
 
 
 export const notDatasheet = {
@@ -146,7 +146,10 @@ export const notDatasheet = {
     pinTypes.input(1),
   ],
 
-  toPins(cell: NotCell) {
+  toPins(cell: Cell) {
+    if (cell.cellType !== 'not') {
+      throw new Error('wrong cell type')
+    }
     const pins = this.pinInfo.map(it => {
       if (it.type === 'output') {
         return R.set(valueLens, Boolean(cell.state.powered), it)
@@ -196,6 +199,10 @@ export const datasheets: Datasheet[] = [
 
 
     toPins(cell) {
+      if (cell.cellType !== 'wire') {
+        throw new Error('wrong cell type')
+      }
+
       const pins = this.pinInfo.map(it => ({
         ...it,
         value: it.type == 'bidirect' ? Boolean(cell.state.powered) : false
@@ -229,7 +236,10 @@ export const datasheets: Datasheet[] = [
       pinTypes.bidirect(1),
     ],
 
-    toPins(cell: WireCell) {
+    toPins(cell: Cell) {
+      if (cell.cellType !== 'wire') {
+        throw new Error('wrong cell type')
+      }
       const pins = this.pinInfo.map(it => {
         if (it.type == 'bidirect') {
           return R.set(valueLens, Boolean(cell.state.powered), it)
@@ -266,6 +276,9 @@ export const datasheets: Datasheet[] = [
     ],
 
     toPins(cell) {
+      if (cell.cellType !== 'wire') {
+        throw new Error('wrong cell type')
+      }
       const pins = this.pinInfo.map(it => {
         if (it.type == 'bidirect') {
           return R.set(valueLens, Boolean(cell.state.powered), it)
@@ -302,6 +315,9 @@ export const datasheets: Datasheet[] = [
     ],
 
     toPins(cell) {
+      if (cell.cellType !== 'wire') {
+        throw new Error('wrong cell type')
+      }
       const pins = this.pinInfo.map(it => {
         if (it.type == 'bidirect') {
           return R.set(valueLens, Boolean(cell.state.powered), it)
@@ -338,6 +354,9 @@ export const datasheets: Datasheet[] = [
     ],
 
     toPins(cell) {
+      if (cell.cellType !== 'wire') {
+        throw new Error('wrong cell type')
+      }
       const pins = this.pinInfo.map(it => {
         if (it.type == 'bidirect') {
           return R.set(valueLens, Boolean(cell.state.powered), it)
@@ -436,16 +455,15 @@ export function visualToPins(cell: Cell): PinCell {
 
 
 export function updateState(state: State): State {
-  const pinsCells = state.cells.map(visualToPins)
-
   const complied = state.compiled
+
   if (!complied.gates) {
+    const pinsCells = state.cells.map(visualToPins)
     let [wires, rest] = findWires(pinsCells)
     complied.gates = rest
     complied.wires = wires
   }
 
-  // const [stateupd, cells] =
   return updateWiresAndGatesInState(state)
 
   // return R.set(cellsLens, updateCellsNToActuall(complied.wires!, complied.gates!), state)
