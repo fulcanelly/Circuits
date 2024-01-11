@@ -2,8 +2,8 @@
 // State managment
 //===========================
 import * as R from 'ramda'
-import { updateState } from './engine'
-import { Cell, NotCell, Position, State, WireCell } from './model'
+import { updateState, visualToPins } from './engine'
+import { Cell, NotCell, Position, State, WireCell, findWires, updateWiresAndGatesInState } from './model'
 import { buildLens, buildPath } from './utils'
 
 export const genericWire: Cell = {
@@ -44,6 +44,10 @@ export function initState(): State {
   return {
     mode: {
       editing: false
+    },
+
+    compiled: {
+
     },
 
     field: {
@@ -144,6 +148,19 @@ export function handleToggleEditing(state: State, action: Action): State {
   return R.set(modeEditingLens, !lastEditingState, state)
 }
 
+
+export function recompileWires(state: State, cells: Cell[] = state.cells): State {
+  const pinsCells = cells.map(visualToPins)
+  let [wires, rest] = findWires(pinsCells)
+
+  return R.pipe(
+    R.set(buildLens<State>().compiled.gates!._(), rest),
+    R.set(buildLens<State>().compiled.wires!._(), wires),
+    R.set(buildLens<State>().cells._(), cells),
+  )(state)
+}
+
+
 export function handleTileClick(state: State, action: Action): State {
   if (!state.mode.editing) {
     return state
@@ -162,10 +179,9 @@ export function handleTileClick(state: State, action: Action): State {
       )
     ]
 
-    return {
-      ...state, cells
-    }
+    return recompileWires(state, cells)
   } else {
+
     //else add tile of that type
 
     const newTile = {
@@ -175,19 +191,17 @@ export function handleTileClick(state: State, action: Action): State {
 
     const cells = [
       newTile,
-    //  genDebugCellFor(action.pos),
-     // ...genDebugCellsFor(action.pos),
       ...state.cells.filter(
         item => JSON.stringify(item.position) !== JSON.stringify(action.pos)
       )
     ]
 
-    return {
-      ...state, cells
-    }
+    return recompileWires(state, cells)
   }
 }
 
+
+// window.handleMouseWheelEditing = handleMouseWheelEditing;
 
 function handleMouseWheelEditing(state: State, action: Action): State {
   if (state.hovered) {
@@ -212,7 +226,7 @@ function handleMouseWheelEditing(state: State, action: Action): State {
     let mutation = (x) =>
       (x + Math.sign(action.deltaY))
 
-    return R.over(rotationLens, mutation, state)
+    return recompileWires(R.over(rotationLens, mutation, state))
   }
 
   return state
