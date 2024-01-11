@@ -19,17 +19,13 @@ function App() {
 
 
   useEffect(() => {
-    (window as any).state = state
     document.addEventListener('keydown', function(event) {
       if (event.key === 'r') {
-        // console.log('a')
-
-        dispatch({type:'scale_change', deltaY: -1})
+        dispatch({type:'scale_change', deltaY: 1})
       }
     });
 
-
-    const interval = setInterval(() => sendCellsUpdate(dispatch), 200)
+    const interval = setInterval(() => sendCellsUpdate(dispatch), 2100)
 
    return () => clearInterval(interval)
   }, [])

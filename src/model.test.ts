@@ -1,7 +1,8 @@
-import { actualStatePoweredLens, datasheets, floorMod, getNeighbours, notDatasheet, rotateReverseTimes, rotateTimes, visualToPins } from "./engine"
-import { Cell, findByPosition, findWires, getOppositeIndex, NotCell, PinCell, PowerCell, updateCellsNToActuall, WireCell } from "./model"
+
+import { datasheets, floorMod, notDatasheet, rotateTimes, visualToPins } from "./engine"
+import { Cell, findWires, NotCell, PinCell, PowerCell } from "./model"
 import * as R from 'ramda'
-import { buildPath, isMatch } from './utils'
+import { buildPath } from './utils'
 import { genericWire } from "./reducer"
 import { notGateEntry, powerSourceEntry } from "./circuit"
 
@@ -19,7 +20,7 @@ function builtLens(handler: (proxy: ProxyType) => ProxyType) {
     return R.lensPath(buildPath(handler))
 }
 
-const helpers = {
+export const helpers = {
 
     cells2PinCells(cells: Cell[]): PinCell[] {
         return cells.map(visualToPins)
@@ -178,96 +179,7 @@ describe("model", () => {
 
         let [wires, _] = findWires(helpers.cells2PinCells([first, second]))
 
-        console.log(wires[0].inputs)
         expect(wires[0].inputs[0].pinIndex).toBe(0)
-    })
-
-
-    it("power source should power a wire", () => {
-        let first: Cell = R.mergeDeepLeft({
-                position: { x: 0, y: 0 },
-                state: { rotation: 1 }
-            }, genericWire)
-
-        let second: Cell = R.mergeDeepLeft({
-                position: { x: 1, y: 0 },
-                cellType: 'power'
-            }, genericWire)
-
-
-        let cells = updateCellsNToActuall(
-            helpers.cells2PinCells([first, second]))
-
-        let updatedWire = cells.find(cell => cell.cellType == 'wire') as WireCell
-
-        expect(updatedWire.state.powered).toBe(true)
-    })
-
-    /**
-     *                  =>
-     *  x O >   x x x   => x O >   X X X
-     *                  =>
-     */
-    it("NOT should power wire", () => {
-        let first: Cell = {
-            cellType: 'not',
-            position: { x: 1, y: 0 },
-            state: {
-                rotation: 1, //TODO WHY?
-                powered: true
-            }
-        }
-
-        let second: Cell = {
-            cellType: 'wire',
-            position: { x: 0, y: 0 },
-            state: {
-                rotation: 1,
-                wireType: 0,
-                powered: false
-            }
-        }
-
-        let cells = updateCellsNToActuall(
-            helpers.cells2PinCells([first, second]))
-
-        let updatedWire = cells.find(cell => cell.cellType == 'wire') as WireCell
-
-        expect(updatedWire.state.powered).toBe(true)
-    })
-
-    /**
-     *                  =>
-     *  x O >   x O >   => x O >   X o >
-     *                  =>
-     */
-    it("NOT should power another NOT", () => {
-        let first: any = {
-            id: 1,
-            cellType: 'not',
-            position: { x: 0, y: 0 },
-            state: {
-                rotation: 1,
-                powered: true
-            }
-        }
-        let second: any = {
-            id: 2,
-            cellType: 'not',
-            position: { x: 1, y: 0 },
-            state: {
-                rotation: 1,      //not
-                powered: true
-            }
-        }
-
-        let cells = updateCellsNToActuall(
-            helpers.cells2PinCells([first, second]))
-
-        let updatedNot = cells.find(cell => (cell as any).id == 1) as NotCell
-
-        expect(updatedNot.state.powered).toBe(false)
-
     })
 
     /**
