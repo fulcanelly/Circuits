@@ -5,6 +5,7 @@ import * as R from 'ramda'
 import { updateState, visualToPins } from './engine'
 import { Cell, NotCell, Position, State, WireCell, findWires, updateWiresAndGatesInState } from './model'
 import { buildLens, buildPath } from './utils'
+import { saveCurrentCells } from './storage'
 
 export const genericWire: Cell = {
   cellType: 'wire',
@@ -153,6 +154,7 @@ export function recompileWires(state: State, cells: Cell[] = state.cells): State
   const pinsCells = cells.map(visualToPins)
   let [wires, rest] = findWires(pinsCells)
 
+  saveCurrentCells(cells)
   return R.pipe(
     R.set(buildLens<State>().compiled.gates!._(), rest),
     R.set(buildLens<State>().compiled.wires!._(), wires),
