@@ -4,6 +4,7 @@ import { settings } from './settings';
 import { Switch } from '@mui/material';
 import { notGateEntry, powerSourceEntry, ShowByEntryCircuit, voidEntry, wireEntry } from './circuit';
 import { Cell, Position } from './model';
+import * as R from 'ramda'
 
 //===========================
 // Interface
@@ -95,22 +96,24 @@ export function Grid({ dispatch, children }) {
     resizeCanvas(canvas)
   }, [])
 
-  const drawMouseHover = ({x, y}) => {
+  // const drawMouseHover = ({x, y}) => {
 
-    sendTileHover(dispatch, selected)
-    const canvas = canvasRef.current as any
-    const ctx = canvas.getContext('2d')
+  //   sendTileHover(dispatch, selected)
+  //   const canvas = canvasRef.current as any
+  //   const ctx = canvas.getContext('2d')
 
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-    ctx.fillStyle = 'rgba(74, 132, 151, 0.5)'
+  //   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+  //   ctx.fillStyle = 'rgba(74, 132, 151, 0.5)'
 
-    const [x_, y_] = [x / 50, y / 50].map(Math.floor)
 
-    ctx.fillRect(
-      x_ * settings.cellSize, y_ * settings.cellSize,
-      settings.cellSize, settings.cellSize)
+  //   const [x_, y_] = [x, y].map(R.divide(R.__, 50))
+  //     .map(Math.floor)
 
-  }
+  //   ctx.fillRect(
+  //     x_ * settings.cellSize, y_ * settings.cellSize,
+  //     settings.cellSize, settings.cellSize)
+
+  // }
 
   const handleMouseClick = (event) => {
     if (selected) {
@@ -127,15 +130,19 @@ export function Grid({ dispatch, children }) {
       x: event.nativeEvent.layerX,
       y: event.nativeEvent.layerY
     }
-    drawMouseHover(pos)
+    // drawMouseHover(pos)
 
     //
     const native = event.nativeEvent
     const [x, y] = [
       native.layerX, native.layerY
-    ].map(it => Math.floor(it / settings.cellSize))
+    ].map(R.divide(R.__, settings.cellSize)).map(Math.floor);
+
+
+    sendTileHover(dispatch, { x, y })
 
     setSelected({x, y})
+    // dispatch()
   }
 
   return <div

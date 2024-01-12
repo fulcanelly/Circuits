@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { settings } from './settings';
 import * as R from 'ramda'
 import CSS from 'csstype';
-import { Cell, NotCell, PowerCell, VoidCell, WireCell } from './model';
+import { Cell, NotCell, PowerCell, State, VoidCell, WireCell } from './model';
 
 //===========================
 // Circuit components
@@ -30,7 +30,9 @@ function adjustTileCanvasSize(canvasRef) {
 
 export function getCanvasCtx(ref) {
   const canvas = ref.current
+
   return canvas.getContext('2d')
+
 }
 
 const sizes = [
@@ -112,7 +114,7 @@ function rotationToTransform(rotation) {
   return `rotate(${deg}deg)`
 }
 
-export function Void({}) {
+export function Void({ }) {
   const canvasRef = useRef(null)
 
   const style = {
@@ -122,7 +124,7 @@ export function Void({}) {
   useEffect(() => {
     adjustTileCanvasSize(canvasRef)
     fillCellBackground(getCanvasCtx(canvasRef))
-  },[])
+  }, [])
 
   return <canvas
     ref={canvasRef}
@@ -131,7 +133,7 @@ export function Void({}) {
 }
 
 
-export function PowerSource({}) {
+export function PowerSource({ }) {
   const canvasRef = useRef(null)
 
   const style = {
@@ -141,7 +143,7 @@ export function PowerSource({}) {
   useEffect(() => {
     adjustTileCanvasSize(canvasRef)
     drawPowerSource(getCanvasCtx(canvasRef))
-  },[])
+  }, [])
 
   return <canvas
     ref={canvasRef}
@@ -150,7 +152,7 @@ export function PowerSource({}) {
 }
 
 
-export function DebugTile({state}) {
+export function DebugTile({ state }) {
   return <p>{JSON.stringify(state)}</p>
 }
 
@@ -217,12 +219,12 @@ export function NotGateCircuit({ state: { rotation, powered } }) {
   }, [])
 
   return <canvas
-      ref={canvasRef}
-      style={style}>
-    </canvas>
+    ref={canvasRef}
+    style={style}>
+  </canvas>
 }
 
-export function WireCircuit({ state: { powered, wireType, rotation} }) {
+export function WireCircuit({ state: { powered, wireType, rotation } }) {
   const canvasRef = useRef(null)
 
   const style = {
@@ -246,7 +248,7 @@ export function WireCircuit({ state: { powered, wireType, rotation} }) {
   useEffect(() => {
     adjustTileCanvasSize(canvasRef)
     wireTypes[wireType](getCanvasCtx(canvasRef), color)
-  },[])
+  }, [])
 
   return <canvas
     ref={canvasRef}
@@ -260,7 +262,7 @@ export function ButtonCircuit({ rotation, pressed }) {
 }
 
 // helper component used to place circuit in right spot
-export function Positioned({pos, children}) {
+export function Positioned({ pos, children }) {
   const style: CSS.Properties = {
     position: 'absolute',
     top: `${pos.y * settings.cellSize}px`,
@@ -343,21 +345,21 @@ export function debugEntry(i = 'NaN'): Cell {
 }
 
 // component responsible for dispatching circuit
-export function ShowByEntryCircuit({entry}) {
+export function ShowByEntryCircuit({ entry }) {
   if (entry.cellType == 'wire') {
     return <WireCircuit state={entry.state}></WireCircuit>
   }
   if (entry.cellType == 'power') {
-    return <PowerSource/>
+    return <PowerSource />
   }
   if (entry.cellType == 'void') {
-    return <Void/>
+    return <Void />
   }
   if (entry.cellType == 'not') {
     return <NotGateCircuit state={entry.state}></NotGateCircuit>
   }
   if (entry.cellType == 'debug') {
-    return <DebugTile state={entry.state}/>
+    return <DebugTile state={entry.state} />
   }
 
   return <></>
@@ -370,13 +372,58 @@ export function keyOfCType(entry) {
 }
 
 // component responsible for placing circuit in the right point
-export function CircuitComposer({state}) {
+export function CircuitComposer({ state }: { state: State }) {
+  useEffect(() => { }, [state.selected.entry?.state])
   return <div>
+
+
     {state.cells.map(
       entry => <Positioned key={keyOfCType(entry)} pos={entry.position}>
-        <ShowByEntryCircuit entry={entry}/>
-      </Positioned>) }
+        <ShowByEntryCircuit entry={entry} />
+      </Positioned>)}
+
+    {state.hovered && <AlmostOpaque>
+      <Positioned key={1} pos={state.hovered}>
+        {
+          state.selected.entry ?  <ShowByEntryCircuit entry={state.selected.entry} /> : <Void />
+        }
+      </Positioned>
+    </AlmostOpaque>}
   </div>
 }
 
 
+function AlmostOpaque({ children }) {
+
+
+  const style: React.CSSProperties = {
+    opacity: '0.5',
+    backgroundColor: 'rgba(0, 0, 255, 255)'
+    , position: 'relative',
+  }
+
+  //   position: 'relative',
+  //   // ... any other styles you need for the container
+  // };
+
+  // const overlayStyle: React.CSSProperties = {
+  //   position: 'absolute',
+  //   top: 0,
+  //   right: 0,
+  //   bottom: 0,
+  //   left: 0,
+  //   backgroundColor: 'rgba(0, 0, 255, 1)', // Adjust the alpha for intensity
+  //   opacity: 0.5, // Adjust for overall opacity
+  //   pointerEvents: 'none', // Allows clicks to pass through to elements underneath
+  // };
+
+  return (
+    <div style={style}>
+      {children}
+      {/* <div style={overlayStyle} /> This is the blue overlay */}
+
+    </div>
+  );
+  // return <div style={style}>{children}</div>
+
+}

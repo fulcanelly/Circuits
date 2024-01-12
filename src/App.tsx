@@ -35,7 +35,7 @@ function App() {
   useEffect(() => {
     document.addEventListener('keydown', function (event) {
       if (event.key === 'r') {
-        dispatch({ type: 'scale_change', deltaY: 1 })
+        dispatch({ type: 'scale_change', deltaY: 0 })
       }
     });
 
